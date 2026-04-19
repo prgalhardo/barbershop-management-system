@@ -35,7 +35,6 @@ input[type="datetime-local"] {
     width: 100%;
     max-width: 100%;
     display: block;
-    font-size: 16px;
 }
 
 button {
@@ -90,4 +89,31 @@ li {
     .container {
         padding: 15px;
     }
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.tooltiptext {
+    visibility: hidden;
+    width: 100%;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 6px;
+    border-radius: 5px;
+
+    position: absolute;
+    bottom: 110%;
+    left: 0;
+    z-index: 1;
+
+    font-size: 12px;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
 }

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from datetime import datetime, timedelta  # 🔥 adicionado timedelta
+from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
@@ -21,8 +21,10 @@ def home():
         nome = request.form.get("nome")
         servico = request.form.get("servico")
         data = request.form.get("data")
+        hora = request.form.get("hora")
 
-        data_obj = datetime.strptime(data, "%Y-%m-%dT%H:%M")
+        data_completa = f"{data} {hora}"
+        data_obj = datetime.strptime(data_completa, "%Y-%m-%d %H:%M")
 
         # Calcula duração
         duracao = duracao_servicos.get(servico, 60)
@@ -39,9 +41,8 @@ def home():
         # Regra 3: conflito inteligente (intervalo)
         else:
             for ag in agendamentos:
-                inicio_existente = datetime.strptime(ag["data_original"], "%Y-%m-%dT%H:%M")
+                inicio_existente = datetime.strptime(ag["data_original"], "%Y-%m-%d %H:%M")
 
-                # Usa duração se existir (senão assume 60)
                 duracao_existente = ag.get("duracao", 60)
                 fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
 
@@ -57,11 +58,12 @@ def home():
                 "nome": nome,
                 "servico": servico,
                 "data": data_formatada,
-                "data_original": data,
-                "duracao": duracao  # 🔥 NOVO
+                "data_original": data_completa,
+                "duracao": duracao
             })
 
     return render_template("index.html", agendamentos=agendamentos, erro=erro)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

@@ -18,19 +18,35 @@
         {% endif %}
 
         <form method="POST">
+
             <label>Nome:</label><br>
-            <input type="text" name="nome"><br><br>
+            <div class="tooltip">
+                <input type="text" name="nome" placeholder="Nome completo">
+                <span class="tooltiptext">Adicione seu Nome + Sobrenome</span>
+            </div><br>
 
             <label>Serviço:</label><br>
-            <select name="servico">
-                <option value="Corte">Corte</option>
-                <option value="Barba">Barba</option>
-                <option value="Corte + Barba">Corte + Barba</option>
-                <option value="Sobrancelha">Sobrancelha</option>
-            </select><br><br>
+            <div class="tooltip">
+                <select name="servico">
+                    <option value="Corte">Corte</option>
+                    <option value="Barba">Barba</option>
+                    <option value="Corte + Barba">Corte + Barba</option>
+                    <option value="Sobrancelha">Sobrancelha</option>
+                </select>
+                <span class="tooltiptext">Escolha qual dos nossos serviços você gostaria de agendar.</span>
+            </div><br>
 
-            <label>Data e Hora:</label><br>
-            <input type="datetime-local" name="data"><br><br>
+            <label>Data:</label><br>
+            <div class="tooltip">
+                <input type="date" name="data">
+                <span class="tooltiptext">Escolha a data.</span>
+            </div><br>
+
+            <label>Hora:</label><br>
+            <div class="tooltip">
+                <input type="time" name="hora" disabled>
+                <span class="tooltiptext">Escolha a hora.</span>
+            </div><br>
 
             <button type="submit">Agendar</button>
         </form>
@@ -49,5 +65,20 @@
 
     </div>
 
+    <script>
+        const inputData = document.querySelector('input[name="data"]');
+        const inputHora = document.querySelector('input[name="hora"]');
+
+        inputData.addEventListener("change", function() {
+            if (inputData.value) {
+                inputHora.disabled = false;
+            } else {
+                inputHora.disabled = true;
+                inputHora.value = "";
+            }
+        });
+    </script>
+
 </body>
+
 </html>
