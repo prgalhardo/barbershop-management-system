@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -21,11 +25,17 @@ h1 {
 
 input, select {
     width: 100%;
-    box-sizing: border-box;
     padding: 10px;
     margin: 5px 0 15px;
     border-radius: 5px;
     border: 1px solid #ccc;
+}
+
+/* 🔥 CORREÇÃO PRINCIPAL */
+input[type="datetime-local"] {
+    width: 100%;
+    max-width: 100%;
+    display: block;
 }
 
 button {
