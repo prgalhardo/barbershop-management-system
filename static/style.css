@@ -31,11 +31,11 @@ input, select {
     border: 1px solid #ccc;
 }
 
-/* 🔥 CORREÇÃO PRINCIPAL */
 input[type="datetime-local"] {
     width: 100%;
     max-width: 100%;
     display: block;
+    font-size: 16px;
 }
 
 button {
