@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Barbearia</title>
+</head>
+<body>
+
+    <h1>Agendamento de Barbearia</h1>
+
+    <form method="POST">
+        <label>Nome:</label><br>
+        <input type="text" name="nome"><br><br>
+
+        <label>Serviço:</label><br>
+        <select name="servico">
+            <option value="Corte">Corte</option>
+            <option value="Barba">Barba</option>
+            <option value="Corte + Barba">Corte + Barba</option>
+            <option value="Sobrancelha">Sobrancelha</option>
+        </select><br><br>
+
+        <label>Data e Hora:</label><br>
+        <input type="datetime-local" name="data"><br><br>
+
+        <button type="submit">Agendar</button>
+    </form>
+
+</body>
+</html>
