@@ -29,13 +29,18 @@ def criar_tabela():
     conn.commit()
     conn.close()
 
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     erro = None
 
-    # Filtro unificado (prioriza GET, depois POST)
+    # Filtro (GET tem prioridade)
     data_filtro = request.args.get("data") or request.form.get("data")
+    servico_filtro = request.args.get("servico") or request.form.get("servico")
 
+    duracao_selecionada = duracao_servicos.get(servico_filtro, 30)
+
+    # CADASTRAR AGENDAMENTO
     if request.method == "POST":
         nome = request.form.get("nome")
         servico = request.form.get("servico")
@@ -48,19 +53,17 @@ def home():
             data_completa = f"{data} {hora}"
             data_obj = datetime.strptime(data_completa, "%Y-%m-%d %H:%M")
 
-            # Calcula duração
             duracao = duracao_servicos.get(servico, 60)
             data_fim = data_obj + timedelta(minutes=duracao)
 
-            # Regra 1: dia da semana (terça a sábado)
+            # Regra 1: dias permitidos
             if data_obj.weekday() < 1 or data_obj.weekday() > 5:
                 erro = "Atendemos apenas de terça a sábado."
 
-            # Regra 2: horário (08h às 18h)
+            # Regra 2: horário permitido
             elif data_obj.hour < 8 or data_obj.hour >= 18:
                 erro = "Horário permitido é das 08h às 18h."
 
-            # Regra 3: conflito inteligente
             else:
                 conn = sqlite3.connect("barbearia.db")
                 cursor = conn.cursor()
@@ -70,20 +73,20 @@ def home():
                     FROM agendamentos 
                     WHERE data LIKE ?
                 """, (f"{data}%",))
-                agendamentos_db = cursor.fetchall()
 
+                agendamentos_db = cursor.fetchall()
                 conn.close()
 
-                for ag in agendamentos_db:
-                    inicio_existente = datetime.strptime(ag[0], "%Y-%m-%d %H:%M")
-                    duracao_existente = ag[1]
+                # Regra 3: conflito de horários
+                for data_str, duracao_existente in agendamentos_db:
+                    inicio_existente = datetime.strptime(data_str, "%Y-%m-%d %H:%M")
                     fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
 
-                    if (data_obj < fim_existente) and (data_fim > inicio_existente):
+                    if not (data_fim <= inicio_existente or data_obj >= fim_existente):
                         erro = "Este horário já está ocupado."
                         break
 
-            # Salva no banco se não houver erro
+            # Salva se estiver ok
             if not erro:
                 conn = sqlite3.connect("barbearia.db")
                 cursor = conn.cursor()
@@ -96,7 +99,7 @@ def home():
                 conn.commit()
                 conn.close()
 
-    # Busca no banco com filtro por data
+    # BUSCAR AGENDAMENTOS DO DIA (ORDENADO)
     conn = sqlite3.connect("barbearia.db")
     cursor = conn.cursor()
 
@@ -105,6 +108,7 @@ def home():
             SELECT nome, servico, data 
             FROM agendamentos 
             WHERE data LIKE ?
+            ORDER BY data
         """, (f"{data_filtro}%",))
         dados = cursor.fetchall()
     else:
@@ -115,7 +119,9 @@ def home():
     agendamentos = []
 
     for ag in dados:
-        data_formatada = datetime.strptime(ag[2], "%Y-%m-%d %H:%M").strftime("%d/%m/%Y às %H:%M")
+        data_formatada = datetime.strptime(
+            ag[2], "%Y-%m-%d %H:%M"
+        ).strftime("%d/%m/%Y às %H:%M")
 
         agendamentos.append({
             "nome": ag[0],
@@ -123,12 +129,60 @@ def home():
             "data": data_formatada
         })
 
+    # GERAR HORÁRIOS (BOTÕES)
+    horarios = []
+
+    if data_filtro:
+        inicio_dia = datetime.strptime("08:00", "%H:%M")
+        fim_dia = datetime.strptime("18:00", "%H:%M")
+
+        conn = sqlite3.connect("barbearia.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT data, duracao FROM agendamentos
+            WHERE data LIKE ?
+        """, (f"{data_filtro}%",))
+
+        agendamentos_db = cursor.fetchall()
+        conn.close()
+
+        atual = inicio_dia
+
+        while atual < fim_dia:
+            hora_str = atual.strftime("%H:%M")
+
+            inicio_teste = atual
+            fim_teste = inicio_teste + timedelta(minutes=duracao_selecionada)
+
+            ocupado = False
+
+            for data_str, duracao_existente in agendamentos_db:
+                inicio_existente = datetime.strptime(data_str, "%Y-%m-%d %H:%M")
+                fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
+
+                if not (fim_teste <= inicio_existente or inicio_teste >= fim_existente):
+                    ocupado = True
+                    break
+
+            if fim_teste > fim_dia:
+                ocupado = True
+
+            horarios.append({
+                "hora": hora_str,
+                "ocupado": ocupado
+            })
+
+            atual += timedelta(minutes=30)
+
     return render_template(
         "index.html",
         agendamentos=agendamentos,
         erro=erro,
-        data_filtro=data_filtro
+        data_filtro=data_filtro,
+        horarios=horarios
     )
+
 
 if __name__ == "__main__":
     criar_tabela()

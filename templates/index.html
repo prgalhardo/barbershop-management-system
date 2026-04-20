@@ -22,13 +22,18 @@
 
             <label>Nome:</label><br>
             <div class="tooltip">
-                <input type="text" name="nome" placeholder="Nome completo" value="{{ request.args.get('nome', '') }}">
+                <input 
+                    type="text" 
+                    name="nome" 
+                    placeholder="Nome completo" 
+                    value="{{ request.args.get('nome', '') }}"
+                >
                 <span class="tooltiptext">Adicione seu Nome + Sobrenome</span>
             </div><br>
 
             <label>Serviço:</label><br>
             <div class="tooltip">
-                <select name="servico">
+                <select name="servico" onchange="filtrarPorData()">
                     <option value="Corte" {% if request.args.get('servico') == 'Corte' %}selected{% endif %}>Corte</option>
                     <option value="Barba" {% if request.args.get('servico') == 'Barba' %}selected{% endif %}>Barba</option>
                     <option value="Corte + Barba" {% if request.args.get('servico') == 'Corte + Barba' %}selected{% endif %}>Corte + Barba</option>
@@ -48,20 +53,35 @@
                 <span class="tooltiptext">Escolha a data.</span>
             </div><br>
 
-            <label>Hora:</label><br>
-            <div class="tooltip">
-                <input 
-                    type="time" 
-                    name="hora" 
-                    min="08:00" 
-                    max="18:00" 
-                    step="1800"
-                    {% if not data_filtro %}disabled{% endif %}
-                >
-                <span class="tooltiptext">Escolha a hora (Atendimento das 08h às 18h)</span>
-            </div><br>
+            {% if data_filtro %}
+                <label>Hora:</label><br>
 
+                <div class="horarios">
+                    {% for h in horarios %}
+                        <button 
+                            type="button"
+                            class="hora-btn 
+                                {% if h.ocupado %}ocupado{% endif %}
+                                {% if request.args.get('hora') == h.hora %}selecionado{% endif %}"
+                            onclick="selecionarHora('{{ h.hora }}', this)"
+                            {% if h.ocupado %}disabled{% endif %}
+                        >
+                            {{ h.hora }}
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <input 
+                    type="hidden" 
+                    name="hora" 
+                    id="horaSelecionada"
+                    value="{{ request.args.get('hora', '') }}"
+                >
+            {% endif %}
+
+            <br>
             <button type="submit">Agendar</button>
+
         </form>
 
         {% if agendamentos %}
@@ -82,20 +102,11 @@
 
     <script>
         const inputData = document.querySelector('input[name="data"]');
-        const inputHora = document.querySelector('input[name="hora"]');
-
-        function verificarData() {
-            if (inputData.value) {
-                inputHora.disabled = false;
-            } else {
-                inputHora.disabled = true;
-                inputHora.value = "";
-            }
-        }
 
         function filtrarPorData() {
             const nome = document.querySelector('input[name="nome"]').value;
             const servico = document.querySelector('select[name="servico"]').value;
+            const hora = document.getElementById("horaSelecionada")?.value;
 
             let url = "/?data=" + inputData.value;
 
@@ -107,11 +118,22 @@
                 url += "&servico=" + encodeURIComponent(servico);
             }
 
+            if (hora) {
+                url += "&hora=" + encodeURIComponent(hora);
+            }
+
             window.location.href = url;
         }
 
-        inputData.addEventListener("change", verificarData);
-        window.addEventListener("load", verificarData);
+        function selecionarHora(hora, elemento) {
+            document.getElementById("horaSelecionada").value = hora;
+
+            document.querySelectorAll(".hora-btn").forEach(btn => {
+                btn.classList.remove("selecionado");
+            });
+
+            elemento.classList.add("selecionado");
+        }
     </script>
 
 </body>
