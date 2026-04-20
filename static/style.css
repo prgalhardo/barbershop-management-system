@@ -63,16 +63,6 @@ input[type="time"] {
     background-size: 18px;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    display: none;
-}
-
-input[type="time"]::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    display: none;
-}
-
 button {
     width: 100%;
     padding: 12px;
