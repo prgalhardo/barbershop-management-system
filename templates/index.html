@@ -39,13 +39,25 @@
 
             <label>Data:</label><br>
             <div class="tooltip">
-                <input type="date" name="data">
+                <input 
+                    type="date" 
+                    name="data" 
+                    value="{{ data_filtro or '' }}"
+                    onchange="filtrarPorData()"
+                >
                 <span class="tooltiptext">Escolha a data.</span>
             </div><br>
 
             <label>Hora:</label><br>
             <div class="tooltip">
-                <input type="time" name="hora" min="08:00" max="18:00" step="1800" disabled>
+                <input 
+                    type="time" 
+                    name="hora" 
+                    min="08:00" 
+                    max="18:00" 
+                    step="1800"
+                    {% if not data_filtro %}disabled{% endif %}
+                >
                 <span class="tooltiptext">Escolha a hora (Atendimento das 08h às 18h)</span>
             </div><br>
 
@@ -70,16 +82,24 @@
         const inputData = document.querySelector('input[name="data"]');
         const inputHora = document.querySelector('input[name="hora"]');
 
-        inputData.addEventListener("change", function() {
+        function verificarData() {
             if (inputData.value) {
                 inputHora.disabled = false;
             } else {
                 inputHora.disabled = true;
                 inputHora.value = "";
             }
-        });
+        }
+
+        function filtrarPorData() {
+            if (inputData.value) {
+                window.location.href = "/?data=" + inputData.value;
+            }
+        }
+
+        inputData.addEventListener("change", verificarData);
+        window.addEventListener("load", verificarData);
     </script>
 
 </body>
-
 </html>
