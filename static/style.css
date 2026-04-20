@@ -37,11 +37,33 @@ input, select {
 
 input[type="date"],
 input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
     width: 100%;
-    max-width: 100%;
     height: 40px;
     padding: 10px;
+    padding-right: 35px;
     font-size: 13px;
+}
+
+input[type="date"] {
+    background: url("https://cdn-icons-png.flaticon.com/512/747/747310.png") no-repeat right 10px center;
+    background-size: 18px;
+}
+
+input[type="time"] {
+    background: url("https://cdn-icons-png.flaticon.com/512/992/992700.png") no-repeat right 10px center;
+    background-size: 18px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    display: none;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    display: none;
 }
 
 button {
