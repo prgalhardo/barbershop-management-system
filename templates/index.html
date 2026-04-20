@@ -22,17 +22,17 @@
 
             <label>Nome:</label><br>
             <div class="tooltip">
-                <input type="text" name="nome" placeholder="Nome completo">
+                <input type="text" name="nome" placeholder="Nome completo" value="{{ request.args.get('nome', '') }}">
                 <span class="tooltiptext">Adicione seu Nome + Sobrenome</span>
             </div><br>
 
             <label>Serviço:</label><br>
             <div class="tooltip">
                 <select name="servico">
-                    <option value="Corte">Corte</option>
-                    <option value="Barba">Barba</option>
-                    <option value="Corte + Barba">Corte + Barba</option>
-                    <option value="Sobrancelha">Sobrancelha</option>
+                    <option value="Corte" {% if request.args.get('servico') == 'Corte' %}selected{% endif %}>Corte</option>
+                    <option value="Barba" {% if request.args.get('servico') == 'Barba' %}selected{% endif %}>Barba</option>
+                    <option value="Corte + Barba" {% if request.args.get('servico') == 'Corte + Barba' %}selected{% endif %}>Corte + Barba</option>
+                    <option value="Sobrancelha" {% if request.args.get('servico') == 'Sobrancelha' %}selected{% endif %}>Sobrancelha</option>
                 </select>
                 <span class="tooltiptext">Escolha qual dos nossos serviços você gostaria de agendar.</span>
             </div><br>
@@ -64,17 +64,19 @@
             <button type="submit">Agendar</button>
         </form>
 
-        <h2>Agendamentos</h2>
+        {% if agendamentos %}
+            <h2>Agendamentos</h2>
 
-        <div class="agenda">
-            {% for agendamento in agendamentos %}
-                <div class="card">
-                    <p><strong>Cliente:</strong> {{ agendamento.nome }}</p>
-                    <p><strong>Serviço:</strong> {{ agendamento.servico }}</p>
-                    <p><strong>Horário:</strong> {{ agendamento.data }}</p>
-                </div>
-            {% endfor %}
-        </div>
+            <div class="agenda">
+                {% for agendamento in agendamentos %}
+                    <div class="card">
+                        <p><strong>Cliente:</strong> {{ agendamento.nome }}</p>
+                        <p><strong>Serviço:</strong> {{ agendamento.servico }}</p>
+                        <p><strong>Horário:</strong> {{ agendamento.data }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
     </div>
 
@@ -92,9 +94,20 @@
         }
 
         function filtrarPorData() {
-            if (inputData.value) {
-                window.location.href = "/?data=" + inputData.value;
+            const nome = document.querySelector('input[name="nome"]').value;
+            const servico = document.querySelector('select[name="servico"]').value;
+
+            let url = "/?data=" + inputData.value;
+
+            if (nome) {
+                url += "&nome=" + encodeURIComponent(nome);
             }
+
+            if (servico) {
+                url += "&servico=" + encodeURIComponent(servico);
+            }
+
+            window.location.href = url;
         }
 
         inputData.addEventListener("change", verificarData);
