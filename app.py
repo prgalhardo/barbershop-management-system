@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime, timedelta
 import os
 import sqlite3
@@ -11,6 +11,7 @@ duracao_servicos = {
     "Corte + Barba": 60,
     "Sobrancelha": 30
 }
+
 
 def criar_tabela():
     conn = sqlite3.connect("barbearia.db")
@@ -30,17 +31,46 @@ def criar_tabela():
     conn.close()
 
 
+@app.route("/editar/<int:id>")
+def editar(id):
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, nome, servico, data
+        FROM agendamentos
+        WHERE id = ?
+    """, (id,))
+
+    ag = cursor.fetchone()
+    conn.close()
+
+    if not ag:
+        return redirect("/")
+
+    data_obj = datetime.strptime(ag[3], "%Y-%m-%d %H:%M")
+
+    return redirect(url_for(
+        "home",
+        editar_id=ag[0],
+        nome=ag[1],
+        servico=ag[2],
+        data=data_obj.strftime("%Y-%m-%d"),
+        hora=data_obj.strftime("%H:%M")
+    ))
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     erro = None
 
-    # Filtro (GET tem prioridade)
     data_filtro = request.args.get("data") or request.form.get("data")
     servico_filtro = request.args.get("servico") or request.form.get("servico")
+    editar_id = request.args.get("editar_id") or request.form.get("editar_id")
 
     duracao_selecionada = duracao_servicos.get(servico_filtro, 30)
 
-    # CADASTRAR AGENDAMENTO
+    # CADASTRAR / ATUALIZAR
     if request.method == "POST":
         nome = request.form.get("nome")
         servico = request.form.get("servico")
@@ -56,11 +86,9 @@ def home():
             duracao = duracao_servicos.get(servico, 60)
             data_fim = data_obj + timedelta(minutes=duracao)
 
-            # Regra 1: dias permitidos
             if data_obj.weekday() < 1 or data_obj.weekday() > 5:
                 erro = "Atendemos apenas de terça a sábado."
 
-            # Regra 2: horário permitido
             elif data_obj.hour < 8 or data_obj.hour >= 18:
                 erro = "Horário permitido é das 08h às 18h."
 
@@ -77,7 +105,6 @@ def home():
                 agendamentos_db = cursor.fetchall()
                 conn.close()
 
-                # Regra 3: conflito de horários
                 for data_str, duracao_existente in agendamentos_db:
                     inicio_existente = datetime.strptime(data_str, "%Y-%m-%d %H:%M")
                     fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
@@ -86,26 +113,34 @@ def home():
                         erro = "Este horário já está ocupado."
                         break
 
-            # Salva se estiver ok
             if not erro:
                 conn = sqlite3.connect("barbearia.db")
                 cursor = conn.cursor()
 
-                cursor.execute("""
-                INSERT INTO agendamentos (nome, servico, data, duracao)
-                VALUES (?, ?, ?, ?)
-                """, (nome, servico, data_completa, duracao))
+                if editar_id:
+                    cursor.execute("""
+                        UPDATE agendamentos
+                        SET nome = ?, servico = ?, data = ?, duracao = ?
+                        WHERE id = ?
+                    """, (nome, servico, data_completa, duracao, editar_id))
+                else:
+                    cursor.execute("""
+                        INSERT INTO agendamentos (nome, servico, data, duracao)
+                        VALUES (?, ?, ?, ?)
+                    """, (nome, servico, data_completa, duracao))
 
                 conn.commit()
                 conn.close()
 
-    # BUSCAR AGENDAMENTOS DO DIA (ORDENADO)
+                return redirect("/")
+
+    # LISTAR AGENDAMENTOS
     conn = sqlite3.connect("barbearia.db")
     cursor = conn.cursor()
 
     if data_filtro:
         cursor.execute("""
-            SELECT nome, servico, data 
+            SELECT id, nome, servico, data 
             FROM agendamentos 
             WHERE data LIKE ?
             ORDER BY data
@@ -120,16 +155,17 @@ def home():
 
     for ag in dados:
         data_formatada = datetime.strptime(
-            ag[2], "%Y-%m-%d %H:%M"
+            ag[3], "%Y-%m-%d %H:%M"
         ).strftime("%d/%m/%Y às %H:%M")
 
         agendamentos.append({
-            "nome": ag[0],
-            "servico": ag[1],
+            "id": ag[0],
+            "nome": ag[1],
+            "servico": ag[2],
             "data": data_formatada
         })
 
-    # GERAR HORÁRIOS (BOTÕES)
+    # GERAR HORÁRIOS
     horarios = []
 
     if data_filtro:
@@ -182,7 +218,6 @@ def home():
         data_filtro=data_filtro,
         horarios=horarios
     )
-
 
 if __name__ == "__main__":
     criar_tabela()

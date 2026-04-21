@@ -186,3 +186,15 @@ li {
 .tooltip:hover .tooltiptext {
     visibility: visible;
 }
+
+.card button {
+    width: auto;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+}

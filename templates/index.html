@@ -20,6 +20,8 @@
 
         <form method="POST">
 
+            <input type="hidden" name="editar_id" value="{{ request.args.get('editar_id', '') }}">
+
             <label>Nome:</label><br>
             <div class="tooltip">
                 <input 
@@ -80,7 +82,14 @@
             {% endif %}
 
             <br>
-            <button type="submit">Agendar</button>
+
+            <button type="submit">
+                {% if request.args.get('editar_id') %}
+                    Atualizar Agendamento
+                {% else %}
+                    Agendar
+                {% endif %}
+            </button>
 
         </form>
 
@@ -93,6 +102,10 @@
                         <p><strong>Cliente:</strong> {{ agendamento.nome }}</p>
                         <p><strong>Serviço:</strong> {{ agendamento.servico }}</p>
                         <p><strong>Horário:</strong> {{ agendamento.data }}</p>
+                        <a href="/editar/{{ agendamento.id }}">
+                            <button type="button">Remarcar</button>
+                        </a>
+
                     </div>
                 {% endfor %}
             </div>
