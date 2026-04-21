@@ -69,3 +69,7 @@ pip install -r requirements.txt
 
 # Run application
 python app.py
+
+## 📸 Preview
+
+![Sistema de Agendamento](images/relatorio/figura_5_tela_final.png)
