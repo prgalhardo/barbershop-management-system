@@ -30,7 +30,7 @@ def criar_tabela():
     conn.commit()
     conn.close()
 
-
+# EDITAR (UPDATE)
 @app.route("/editar/<int:id>")
 def editar(id):
     conn = sqlite3.connect("barbearia.db")
@@ -59,7 +59,20 @@ def editar(id):
         hora=data_obj.strftime("%H:%M")
     ))
 
+# DELETAR (DELETE)
+@app.route("/deletar/<int:id>", methods=["POST"])
+def deletar(id):
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
 
+    cursor.execute("DELETE FROM agendamentos WHERE id = ?", (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/")
+
+# HOME
 @app.route("/", methods=["GET", "POST"])
 def home():
     erro = None
@@ -68,7 +81,10 @@ def home():
     servico_filtro = request.args.get("servico") or request.form.get("servico")
     editar_id = request.args.get("editar_id") or request.form.get("editar_id")
 
-    duracao_selecionada = duracao_servicos.get(servico_filtro, 30)
+    if not servico_filtro:
+        duracao_selecionada = 60  # bloqueia mais horários
+    else:
+        duracao_selecionada = duracao_servicos.get(servico_filtro, 60)
 
     # CADASTRAR / ATUALIZAR
     if request.method == "POST":
@@ -169,8 +185,9 @@ def home():
     horarios = []
 
     if data_filtro:
-        inicio_dia = datetime.strptime("08:00", "%H:%M")
-        fim_dia = datetime.strptime("18:00", "%H:%M")
+        data_base = datetime.strptime(data_filtro, "%Y-%m-%d")
+        inicio_dia = data_base.replace(hour=8, minute=0)
+        fim_dia = data_base.replace(hour=18, minute=0)
 
         conn = sqlite3.connect("barbearia.db")
         cursor = conn.cursor()

@@ -91,24 +91,20 @@ button:hover {
     transition: 0.2s ease;
 }
 
-/* hover só se estiver disponível */
 .hora-btn:hover:not(.ocupado) {
     background: #333;
 }
 
-/* ocupado */
 .hora-btn.ocupado {
     background: #ccc;
     color: #666;
     cursor: not-allowed;
 }
 
-/* selecionado */
 .hora-btn.selecionado {
     background: #28a745;
 }
 
-/* clique */
 .hora-btn:active:not(.ocupado) {
     transform: scale(0.95);
 }
@@ -138,10 +134,26 @@ li {
     border-radius: 8px;
     text-align: left;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+    display: flex;
+    flex-direction: column;
 }
 
 .card p {
     margin: 5px 0;
+}
+
+/* BOTÕES DENTRO DO CARD */
+.card a,
+.card form {
+    margin-top: 8px;
+}
+
+.card button {
+    width: 110px; 
+    padding: 8px 0;    
+    font-size: 12px;
+    text-align: center;
 }
 
 /* RESPONSIVO */
@@ -185,16 +197,4 @@ li {
 
 .tooltip:hover .tooltiptext {
     visibility: visible;
-}
-
-.card button {
-    width: auto;
-    padding: 8px 12px;
-    font-size: 12px;
-    margin-top: 10px;
-}
-
-.card {
-    display: flex;
-    flex-direction: column;
 }

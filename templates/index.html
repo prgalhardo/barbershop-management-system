@@ -105,6 +105,9 @@
                         <a href="/editar/{{ agendamento.id }}">
                             <button type="button">Remarcar</button>
                         </a>
+                        <form method="POST" action="/deletar/{{ agendamento.id }}">
+                            <button type="submit">Cancelar</button>
+                        </form>
 
                     </div>
                 {% endfor %}
