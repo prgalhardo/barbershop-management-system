@@ -49,12 +49,12 @@ It replaces manual scheduling with an automated system that:
 ---
 
 ## 📂 Project Structure
-/templates → HTML files
-/static → CSS and JS
-app.py → Flask application
-barbearia.db → SQLite database
-requirements.txt
 
+/templates      → HTML files  
+/static         → CSS and JS  
+app.py          → Flask application  
+barbearia.db    → SQLite database  
+requirements.txt
 
 ---
 
