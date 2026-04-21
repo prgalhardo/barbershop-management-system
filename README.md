@@ -1,50 +1,71 @@
-# barbershop-management-system
-A web application for managing barbershop scheduling, customer data, and services to improve operational efficiency.
+# 💈 Barbershop Management System
 
-# Barbershop Management System
+A web application for managing barbershop appointments with intelligent scheduling, conflict validation, and real-time availability.
 
-A web application for managing barbershop scheduling, customer data, and services to improve operational efficiency.
+---
 
 ## 📌 Project Overview
 
-This project aims to develop a web-based system to help barbershops manage appointments, customers, and services more efficiently. The system is designed to replace manual scheduling methods and improve organization and customer experience.
+This project is a web-based system designed to help barbershops manage appointments efficiently.
 
-## 🎯 Objectives
+It replaces manual scheduling with an automated system that:
+- prevents time conflicts
+- considers service duration
+- improves organization and customer experience
 
-* Improve appointment scheduling
-* Organize customer and service data
-* Reduce operational errors
-* Enhance user experience
+---
+
+## 🎯 Features
+
+- Create appointments (booking)
+- View appointments filtered by date
+- Update appointments (reschedule)
+- Delete appointments (cancel)
+- Intelligent time-slot blocking based on:
+  - service duration
+  - existing bookings
+  - business hours constraints
+- Dynamic UI that updates available time slots
+
+---
+
+## 🧠 Business Rules Implemented
+
+- Service duration affects availability
+- No overlapping appointments allowed
+- Business hours: 08:00 – 18:00
+- Appointments restricted to working days
+- Time slots dynamically disabled when unavailable
+
+---
 
 ## 🛠 Technologies
 
-* Frontend: HTML, CSS, JavaScript (or React)
-* Backend: Python (Flask)
-* Database: (to be defined - e.g., SQLite, MySQL)
+- **Frontend:** HTML, CSS, JavaScript
+- **Backend:** Python (Flask)
+- **Database:** SQLite
+- **Server:** Gunicorn (for deployment)
+
+---
 
 ## 📂 Project Structure
+/templates → HTML files
+/static → CSS and JS
+app.py → Flask application
+barbearia.db → SQLite database
+requirements.txt
 
-* `/src` → application source code
-* `/database` → database scripts
-* `/docs` → project documentation
-* `/figures` → images and diagrams
 
-## 👥 Team Members
+---
 
-* André Luiz Carvalho Odorizi
-* Camilla Soares Nascimento
-* Fabio Augusto do Santos Rodrigues
-* Isaac Luiz da Silva
-* Leonardo de Oliveira Santos
-* Priscila Cristina da Silva
-* Rafael de Souza e Castro Rosa
-* Wilson Ribeiro Filho
+## 🚀 How to Run
 
-## 🚀 Status
+```bash
+# Clone repository
+git clone <your-repo-url>
 
-Project in development.
+# Install dependencies
+pip install -r requirements.txt
 
-## 📚 Academic Context
-
-This project was developed as part of the Information Technology Bachelor's Degree at Universidade Virtual do Estado de São Paulo (UNIVESP).
-
+# Run application
+python app.py
