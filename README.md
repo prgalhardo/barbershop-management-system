@@ -62,7 +62,7 @@ requirements.txt
 
 ```bash
 # Clone repository
-git clone <https://github.com/prgalhardo/barbershop-management-system.git>
+git clone https://github.com/prgalhardo/barbershop-management-system.git
 
 # Install dependencies
 pip install -r requirements.txt
