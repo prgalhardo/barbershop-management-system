@@ -137,3 +137,25 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Python & Ambiente Virtual
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Banco de dados SQLite local
+*.db
+*.sqlite3
+
+# Arquivos temporários do macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Vídeos e arquivos pesados locais
+video/
+*.mp4
+*.mov
