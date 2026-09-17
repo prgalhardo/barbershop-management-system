@@ -12,10 +12,43 @@ duracao_servicos = {
     "Sobrancelha": 30
 }
 
-def criar_tabela():
+def criar_tabelas():
     conn = sqlite3.connect("barbearia.db")
     cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON;")
 
+    # Tabela 1: Serviços
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS servicos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL UNIQUE,
+        duracao INTEGER NOT NULL,
+        preco REAL NOT NULL
+    )
+    """)
+
+    # Tabela 2: Clientes
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS clientes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL UNIQUE,
+        telefone TEXT
+    )
+    """)
+
+    # Tabela 3: Agendamentos com Foreign Keys para clientes e servicos
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agendamentos_v2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cliente_id INTEGER NOT NULL,
+        servico_id INTEGER NOT NULL,
+        data_hora TEXT NOT NULL,
+        FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE,
+        FOREIGN KEY (servico_id) REFERENCES servicos (id) ON DELETE CASCADE
+    )
+    """)
+
+    # Tabela legada para manter a compatibilidade com a página HTML existente
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS agendamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +58,18 @@ def criar_tabela():
         duracao INTEGER
     )
     """)
+
+    # Popula os serviços padrões se a tabela estiver vazia
+    servicos_iniciais = [
+        ("Corte", 60, 35.0),
+        ("Barba", 30, 25.0),
+        ("Corte + Barba", 60, 55.0),
+        ("Sobrancelha", 30, 15.0)
+    ]
+    cursor.executemany("""
+        INSERT OR IGNORE INTO servicos (nome, duracao, preco)
+        VALUES (?, ?, ?)
+    """, servicos_iniciais)
 
     conn.commit()
     conn.close()
@@ -274,7 +319,7 @@ def api_horarios():
     # Busca agendamentos do dia pegando a duração do serviço relacionado via JOIN
     cursor.execute("""
         SELECT a.data_hora, s.duracao
-        FROM agendamentos a
+        FROM agendamentos_v2 a
         JOIN servicos s ON a.servico_id = s.id
         WHERE a.data_hora LIKE ?
     """, (f"{data_filtro}%",))
@@ -335,7 +380,7 @@ def api_criar_agendamento():
 
     # Insere o agendamento
     cursor.execute("""
-        INSERT INTO agendamentos (cliente_id, servico_id, data_hora)
+        INSERT INTO agendamentos_v2 (cliente_id, servico_id, data_hora)
         VALUES (?, ?, ?)
     """, (cliente_id, servico_id, data_hora))
 
@@ -346,5 +391,5 @@ def api_criar_agendamento():
     return jsonify({"mensagem": "Agendamento registrado com sucesso.", "id": novo_id}), 201
 
 if __name__ == "__main__":
-    criar_tabela()
+    criar_tabelas()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))
