@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from datetime import datetime, timedelta
 import os
 import sqlite3
@@ -11,7 +11,6 @@ duracao_servicos = {
     "Corte + Barba": 60,
     "Sobrancelha": 30
 }
-
 
 def criar_tabela():
     conn = sqlite3.connect("barbearia.db")
@@ -235,6 +234,116 @@ def home():
         data_filtro=data_filtro,
         horarios=horarios
     )
+
+# ROTAS DE API (REST / JSON) - PI II
+@app.route("/api/v1/servicos", methods=["GET"])
+def api_servicos():
+    """Retorna todos os serviços disponíveis em JSON"""
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, duracao, preco FROM servicos")
+    rows = cursor.fetchall()
+    conn.close()
+
+    servicos = [
+        {"id": r[0], "nome": r[1], "duracao": r[2], "preco": r[3]}
+        for r in rows
+    ]
+    return jsonify(servicos), 200
+
+@app.route("/api/v1/horarios-disponiveis", methods=["GET"])
+def api_horarios():
+    """Calcula dinamicamente horários livres para uma data e serviço"""
+    data_filtro = request.args.get("data")
+    servico_id = request.args.get("servico_id", type=int)
+
+    if not data_filtro or not servico_id:
+        return jsonify({"erro": "Parâmetros 'data' e 'servico_id' são obrigatórios."}), 400
+
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT duracao FROM servicos WHERE id = ?", (servico_id,))
+    servico = cursor.fetchone()
+    if not servico:
+        conn.close()
+        return jsonify({"erro": "Serviço não encontrado."}), 404
+
+    duracao_min = servico[0]
+
+    # Busca agendamentos do dia pegando a duração do serviço relacionado via JOIN
+    cursor.execute("""
+        SELECT a.data_hora, s.duracao
+        FROM agendamentos a
+        JOIN servicos s ON a.servico_id = s.id
+        WHERE a.data_hora LIKE ?
+    """, (f"{data_filtro}%",))
+    agendamentos_db = cursor.fetchall()
+    conn.close()
+
+    data_base = datetime.strptime(data_filtro, "%Y-%m-%d")
+    inicio_dia = data_base.replace(hour=8, minute=0)
+    fim_dia = data_base.replace(hour=18, minute=0)
+
+    horarios = []
+    atual = inicio_dia
+
+    while atual < fim_dia:
+        fim_teste = atual + timedelta(minutes=duracao_min)
+        ocupado = False
+
+        for data_str, duracao_existente in agendamentos_db:
+            inicio_existente = datetime.strptime(data_str, "%Y-%m-%d %H:%M")
+            fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
+
+            if not (fim_teste <= inicio_existente or atual >= fim_existente):
+                ocupado = True
+                break
+
+        if fim_teste > fim_dia:
+            ocupado = True
+
+        horarios.append({
+            "hora": atual.strftime("%H:%M"),
+            "ocupado": ocupado
+        })
+        atual += timedelta(minutes=30)
+
+    return jsonify(horarios), 200
+
+@app.route("/api/v1/agendamentos", methods=["POST"])
+def api_criar_agendamento():
+    """Cria um agendamento consumindo dados em JSON"""
+    dados = request.get_json()
+    if not dados:
+        return jsonify({"erro": "Requisição inválida. Envie dados em JSON."}), 400
+
+    nome = dados.get("nome")
+    servico_id = dados.get("servico_id")
+    data_hora = dados.get("data_hora")
+
+    if not nome or not servico_id or not data_hora:
+        return jsonify({"erro": "Campos 'nome', 'servico_id' e 'data_hora' são obrigatórios."}), 400
+
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
+
+    # Registra ou recupera o cliente
+    cursor.execute("INSERT OR IGNORE INTO clientes (nome) VALUES (?)", (nome,))
+    cursor.execute("SELECT id FROM clientes WHERE nome = ?", (nome,))
+    cliente_id = cursor.fetchone()[0]
+
+    # Insere o agendamento
+    cursor.execute("""
+        INSERT INTO agendamentos (cliente_id, servico_id, data_hora)
+        VALUES (?, ?, ?)
+    """, (cliente_id, servico_id, data_hora))
+
+    novo_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return jsonify({"mensagem": "Agendamento registrado com sucesso.", "id": novo_id}), 201
 
 if __name__ == "__main__":
     criar_tabela()
