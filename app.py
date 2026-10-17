@@ -113,21 +113,31 @@ def deletar(id):
     conn = sqlite3.connect("barbearia.db")
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM agendamentos WHERE id = ?", (id,))
+    # Recupera a data antes de apagar para poder redirecionar mantendo o dia na tela
+    cursor.execute("SELECT data FROM agendamentos WHERE id = ?", (id,))
+    ag = cursor.fetchone()
+    
+    data_filtro = ""
+    if ag and ag[0]:
+        data_filtro = ag[0].split(" ")[0]
 
+    cursor.execute("DELETE FROM agendamentos WHERE id = ?", (id,))
     conn.commit()
     conn.close()
 
-    return redirect("/")
+    return redirect(url_for("home", data=data_filtro, sucesso="Agendamento cancelado com sucesso."))
 
 # HOME
 @app.route("/", methods=["GET", "POST"])
 def home():
     erro = None
+    sucesso = request.args.get("sucesso")
 
     data_filtro = request.args.get("data") or request.form.get("data")
     servico_filtro = request.args.get("servico") or request.form.get("servico")
-    editar_id = request.args.get("editar_id") or request.form.get("editar_id")
+    editar_id = request.form.get("editar_id") or request.args.get("editar_id")
+    if editar_id == "":
+        editar_id = None
 
     if not servico_filtro:
         duracao_selecionada = 60  # bloqueia mais horários
@@ -161,7 +171,7 @@ def home():
                 cursor = conn.cursor()
 
                 cursor.execute("""
-                    SELECT data, duracao 
+                    SELECT id, data, duracao 
                     FROM agendamentos 
                     WHERE data LIKE ?
                 """, (f"{data}%",))
@@ -169,7 +179,10 @@ def home():
                 agendamentos_db = cursor.fetchall()
                 conn.close()
 
-                for data_str, duracao_existente in agendamentos_db:
+                for id_existente, data_str, duracao_existente in agendamentos_db:
+                    if editar_id and str(id_existente) == str(editar_id):
+                        continue
+
                     inicio_existente = datetime.strptime(data_str, "%Y-%m-%d %H:%M")
                     fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
 
@@ -187,16 +200,18 @@ def home():
                         SET nome = ?, servico = ?, data = ?, duracao = ?
                         WHERE id = ?
                     """, (nome, servico, data_completa, duracao, editar_id))
+                    msg_sucesso = "Horário reagendado com sucesso!"
                 else:
                     cursor.execute("""
                         INSERT INTO agendamentos (nome, servico, data, duracao)
                         VALUES (?, ?, ?, ?)
                     """, (nome, servico, data_completa, duracao))
+                    msg_sucesso = "Agendamento realizado com sucesso!"
 
                 conn.commit()
                 conn.close()
 
-                return redirect("/")
+                return redirect(url_for("home", data=data, sucesso=msg_sucesso))
 
     # LISTAR AGENDAMENTOS
     conn = sqlite3.connect("barbearia.db")
@@ -280,6 +295,7 @@ def home():
         "index.html",
         agendamentos=agendamentos,
         erro=erro,
+        sucesso=sucesso,
         data_filtro=data_filtro,
         horarios=horarios
     )

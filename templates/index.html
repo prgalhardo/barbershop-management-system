@@ -18,8 +18,14 @@
             <p style="color: red;"><strong>{{ erro }}</strong></p>
         {% endif %}
 
-        <form method="POST" id="formAgendamento">
-            <input type="hidden" name="editar_id" value="{{ request.args.get('editar_id', '') }}">
+        {% if sucesso %}
+            <p style="color: #28a745; background-color: #e8f5e9; border: 1px solid #c8e6c9; padding: 10px; border-radius: 5px; font-weight: bold;">
+                {{ sucesso }}
+            </p>
+        {% endif %}
+
+        <form method="POST" id="formAgendamento" action="/">
+            <input type="hidden" name="editar_id" value="{{ request.args.get('editar_id') or '' }}">
 
             <!-- Dados Pessoais -->
             <label for="nome">Nome:</label>
