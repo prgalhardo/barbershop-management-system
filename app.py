@@ -320,12 +320,11 @@ def api_horarios():
 
     duracao_min = servico[0]
 
-    # Busca agendamentos do dia pegando a duração do serviço relacionado via JOIN
+    # Consulta os agendamentos já registados na tabela principal
     cursor.execute("""
-        SELECT a.data_hora, s.duracao
-        FROM agendamentos_v2 a
-        JOIN servicos s ON a.servico_id = s.id
-        WHERE a.data_hora LIKE ?
+        SELECT data, duracao
+        FROM agendamentos
+        WHERE data LIKE ?
     """, (f"{data_filtro}%",))
     agendamentos_db = cursor.fetchall()
     conn.close()
@@ -393,6 +392,41 @@ def api_criar_agendamento():
     conn.close()
 
     return jsonify({"mensagem": "Agendamento registrado com sucesso.", "id": novo_id}), 201
+
+@app.route("/api/v1/agendamentos-do-dia", methods=["GET"])
+def api_agendamentos_do_dia():
+    """Retorna os agendamentos cadastrados para a data informada em JSON"""
+    data_filtro = request.args.get("data")
+    if not data_filtro:
+        return jsonify([]), 200
+
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, nome, servico, data 
+        FROM agendamentos 
+        WHERE data LIKE ?
+        ORDER BY data
+    """, (f"{data_filtro}%",))
+    dados = cursor.fetchall()
+    conn.close()
+
+    agendamentos = []
+    for ag in dados:
+        try:
+            data_formatada = datetime.strptime(ag[3], "%Y-%m-%d %H:%M").strftime("%d/%m/%Y às %H:%M")
+        except Exception:
+            data_formatada = ag[3]
+
+        agendamentos.append({
+            "id": ag[0],
+            "nome": ag[1],
+            "servico": ag[2],
+            "data": data_formatada
+        })
+
+    return jsonify(agendamentos), 200
 
 if __name__ == "__main__":
     criar_tabelas()
