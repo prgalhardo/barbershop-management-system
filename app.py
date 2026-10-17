@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from datetime import datetime, timedelta
 import os
 import sqlite3
 
 app = Flask(__name__)
+app.secret_key = "chave_secreta_urban_barber_2026"
 
 duracao_servicos = {
     "Corte": 60,
@@ -51,6 +52,22 @@ def criar_tabelas():
         FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE,
         FOREIGN KEY (servico_id) REFERENCES servicos (id) ON DELETE CASCADE
     )
+    """)
+
+    # Tabela 4: Usuários / Administradores
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        senha TEXT NOT NULL,
+        role TEXT NOT NULL
+    )
+    """)
+
+    # Cria o barbeiro admin padrão se não existir
+    cursor.execute("""
+        INSERT OR IGNORE INTO usuarios (username, senha, role)
+        VALUES ('admin', 'admin123', 'barbeiro')
     """)
 
     # Tabela legada
@@ -297,7 +314,9 @@ def home():
         erro=erro,
         sucesso=sucesso,
         data_filtro=data_filtro,
-        horarios=horarios
+        horarios=horarios,
+        logado=session.get("usuario_role") == "barbeiro",
+        usuario_nome=session.get("usuario_nome")
     )
 
 # ROTAS DE API (REST / JSON) - PI II
@@ -443,6 +462,31 @@ def api_agendamentos_do_dia():
         })
 
     return jsonify(agendamentos), 200
+
+@app.route("/login", methods=["POST"])
+def login():
+    dados = request.get_json() if request.is_json else request.form
+    usuario = dados.get("username") or dados.get("email")
+    senha = dados.get("password") or dados.get("senha")
+
+    conn = sqlite3.connect("barbearia.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, role FROM usuarios WHERE username = ? AND senha = ?", (usuario, senha))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
+        session["usuario_id"] = user[0]
+        session["usuario_nome"] = user[1]
+        session["usuario_role"] = user[2]
+        return jsonify({"sucesso": True, "user": {"name": user[1], "role": user[2]}}), 200
+    
+    return jsonify({"sucesso": False, "erro": "Usuário ou senha incorretos."}), 401
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
 
 if __name__ == "__main__":
     criar_tabelas()

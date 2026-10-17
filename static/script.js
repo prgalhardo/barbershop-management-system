@@ -1,5 +1,14 @@
 // ==================== 1. NAVEGAÇÃO DE ABAS ====================
 function switchPage(pageId) {
+    // Se tentar acessar a área do barbeiro sem estar logado
+    if (pageId === 'barber-page') {
+        const estaLogado = document.getElementById('user-display')?.innerText.includes('Barbeiro');
+        if (!estaLogado) {
+            alert('Acesso restrito. Faça login como Barbeiro para acessar esta área.');
+            abrirModalLogin();
+            return;
+        }
+    }
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
 
@@ -208,3 +217,48 @@ window.addEventListener('DOMContentLoaded', () => {
         carregarHorariosDinamicos();
     }
 });
+
+// ==================== 5. AUTENTICAÇÃO DO BARBEIRO ====================
+function abrirModalLogin() {
+    document.getElementById('modal-login')?.classList.add('active');
+}
+
+function fecharModalLogin() {
+    document.getElementById('modal-login')?.classList.remove('active');
+    const erroEl = document.getElementById('login-erro');
+    if (erroEl) erroEl.style.display = 'none';
+}
+
+async function realizarLogin(e) {
+    e.preventDefault();
+    const usuario = document.getElementById('login-usuario').value;
+    const senha = document.getElementById('login-senha').value;
+    const erroEl = document.getElementById('login-erro');
+    const btn = document.getElementById('btn-login-submit');
+
+    btn.disabled = true;
+    btn.textContent = "Verificando...";
+
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: usuario, password: senha })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.sucesso) {
+            window.location.reload(); // Recarrega a página autenticado
+        } else {
+            erroEl.textContent = data.erro || "Credenciais inválidas.";
+            erroEl.style.display = 'block';
+        }
+    } catch (err) {
+        erroEl.textContent = "Erro ao conectar com o servidor.";
+        erroEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Entrar no Painel";
+    }
+}

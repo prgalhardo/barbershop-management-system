@@ -13,10 +13,19 @@
         <!-- Barra de Estado do Usuário -->
         <header class="user-bar">
             <div class="user-info" id="user-display">
-                Status: <span>Cliente Conectado</span>
+                {% if logado %}
+                    Status: <strong>{{ usuario_nome }}</strong> (Barbeiro Autorizado)
+                {% else %}
+                    Status: <span>Visitante</span>
+                {% endif %}
             </div>
-            <div>
-                <a href="#client-page" class="btn-action" onclick="switchPage('client-page')">Agendar Horário</a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                {% if logado %}
+                    <a href="/logout" class="btn-logout-link">Sair</a>
+                {% else %}
+                    <button type="button" class="btn-action" onclick="abrirModalLogin()">Entrar como Barbeiro</button>
+                {% endif %}
+                <button type="button" class="btn-action" onclick="switchPage('client-page')">Agendar Horário</button>
             </div>
         </header>
 
@@ -356,5 +365,28 @@
 
     <!-- Script de lógica assíncrona, ViaCEP e manipulação de abas -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <!-- Modal de Login do Barbeiro -->
+    <div class="modal-overlay" id="modal-login">
+        <div class="auth-card">
+            <button type="button" class="close-modal" onclick="fecharModalLogin()">✕</button>
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px;">Acesso do Barbeiro</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Informe suas credenciais para gerenciar agendamentos.</p>
+            
+            <form id="formLogin" onsubmit="realizarLogin(event)">
+                <div class="form-group">
+                    <label for="login-usuario">Usuário:</label>
+                    <input type="text" id="login-usuario" placeholder="admin" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-senha">Senha:</label>
+                    <input type="password" id="login-senha" placeholder="••••••••" required>
+                </div>
+                <p id="login-erro" style="color: var(--danger); font-size: 0.8rem; display: none; margin-bottom: 10px;"></p>
+                <button type="submit" class="btn-submit" id="btn-login-submit">Entrar no Painel</button>
+            </form>
+        </div>
+    </div>
+    
 </body>
 </html>
