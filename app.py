@@ -27,16 +27,21 @@ def criar_tabelas():
     )
     """)
 
-    # Tabela 2: Clientes
+    # Tabela 2: Clientes com campos de endereço (ViaCEP)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL UNIQUE,
-        telefone TEXT
+        nome TEXT NOT NULL,
+        telefone TEXT,
+        cep TEXT,
+        logradouro TEXT,
+        bairro TEXT,
+        cidade TEXT,
+        estado TEXT
     )
     """)
 
-    # Tabela 3: Agendamentos com Foreign Keys para clientes e servicos
+    # Tabela 3: Agendamentos
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS agendamentos_v2 (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +53,7 @@ def criar_tabelas():
     )
     """)
 
-    # Tabela legada para manter a compatibilidade com a página HTML existente
+    # Tabela legada
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS agendamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +64,6 @@ def criar_tabelas():
     )
     """)
 
-    # Popula os serviços padrões se a tabela estiver vazia
     servicos_iniciais = [
         ("Corte", 60, 35.0),
         ("Barba", 30, 25.0),
