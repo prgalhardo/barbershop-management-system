@@ -243,7 +243,12 @@ def home():
         """, (f"{data_filtro}%",))
         dados = cursor.fetchall()
     else:
-        dados = []
+        cursor.execute("""
+            SELECT id, nome, servico, data 
+            FROM agendamentos 
+            ORDER BY data
+        """)
+        dados = cursor.fetchall()
 
     conn.close()
 

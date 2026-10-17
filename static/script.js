@@ -72,8 +72,11 @@ async function carregarAgendamentosDoDia(dataVal) {
     const secao = document.getElementById('secaoAgenda');
     const container = document.getElementById('containerAgendamentos');
 
+    // Se o elemento não existe na tela (ou seja, usuário não é barbeiro), não faz nada
+    if (!secao || !container) return;
+
     if (!dataVal) {
-        if (secao) secao.style.display = 'none';
+        secao.style.display = 'none';
         return;
     }
 
@@ -220,11 +223,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // ==================== 5. AUTENTICAÇÃO DO BARBEIRO ====================
 function abrirModalLogin() {
-    document.getElementById('modal-login')?.classList.add('active');
+    const modal = document.getElementById('modal-login');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    } else {
+        console.error("Elemento modal-login não foi encontrado no DOM.");
+    }
 }
 
 function fecharModalLogin() {
-    document.getElementById('modal-login')?.classList.remove('active');
+    const modal = document.getElementById('modal-login');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
     const erroEl = document.getElementById('login-erro');
     if (erroEl) erroEl.style.display = 'none';
 }
@@ -249,7 +262,8 @@ async function realizarLogin(e) {
         const data = await response.json();
 
         if (response.ok && data.sucesso) {
-            window.location.reload(); // Recarrega a página autenticado
+            // Recarrega na aba do barbeiro já autenticado
+            window.location.href = '/?aba=barbeiro';
         } else {
             erroEl.textContent = data.erro || "Credenciais inválidas.";
             erroEl.style.display = 'block';
@@ -261,4 +275,73 @@ async function realizarLogin(e) {
         btn.disabled = false;
         btn.textContent = "Entrar no Painel";
     }
+}
+
+// ==================== 6. AUTO-LIMPEZA DE MENSAGENS E INICIALIZAÇÃO ====================
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Se vier do login para a aba do barbeiro
+    if (urlParams.get('aba') === 'barbeiro') {
+        switchPage('barber-page');
+    } else if (urlParams.has('data') || urlParams.has('editar_id')) {
+        switchPage('client-page');
+    }
+
+    if (document.getElementById('dataInput')?.value) {
+        carregarHorariosDinamicos();
+    }
+
+    // Remove o aviso verde após 4 segundos e limpa a URL silenciosamente
+    const alertaSucesso = document.querySelector('.alert-success');
+    if (alertaSucesso) {
+        setTimeout(() => {
+            alertaSucesso.style.transition = 'opacity 0.6s ease';
+            alertaSucesso.style.opacity = '0';
+            setTimeout(() => {
+                alertaSucesso.remove();
+            }, 600);
+        }, 3500);
+
+        // Limpa sucesso=... da barra de endereço sem recarregar a tela
+        if (urlParams.has('sucesso')) {
+            const novaUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, novaUrl);
+        }
+    }
+});
+
+// ==================== 7. FILTROS DA AGENDA DO BARBEIRO ====================
+function filtrarAgendaPorData(dataIso) {
+    if (!dataIso) return;
+    // Converte de AAAA-MM-DD para DD/MM/AAAA
+    const partes = dataIso.split('-');
+    const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+    const items = document.querySelectorAll('#appointments-list .card-item');
+    let encontrados = 0;
+
+    items.forEach(item => {
+        const dataItem = item.getAttribute('data-data') || '';
+        if (dataItem.includes(dataFormatada)) {
+            item.style.display = 'flex';
+            encontrados++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    const kpi = document.getElementById('kpi-total-agendamentos');
+    if (kpi) kpi.textContent = encontrados;
+}
+
+function limparFiltroDataBarbeiro() {
+    const inputData = document.getElementById('filtro-data-barbeiro');
+    if (inputData) inputData.value = '';
+
+    const items = document.querySelectorAll('#appointments-list .card-item');
+    items.forEach(item => item.style.display = 'flex');
+
+    const kpi = document.getElementById('kpi-total-agendamentos');
+    if (kpi) kpi.textContent = items.length;
 }
