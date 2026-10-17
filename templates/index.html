@@ -2,162 +2,359 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Urban Barber - Agendamento de Horários</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Barber - Agendamento, Gestão & Estilo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
 
-    <main class="container">
+    <main class="main-container">
 
-        <header>
-            <h1>Urban Barber</h1>
-            <p class="subtitulo">Agende seu horário!</p>
+        <!-- Barra de Estado do Usuário -->
+        <header class="user-bar">
+            <div class="user-info" id="user-display">
+                Status: <span>Cliente Conectado</span>
+            </div>
+            <div>
+                <a href="#client-page" class="btn-action" onclick="switchPage('client-page')">Agendar Horário</a>
+            </div>
         </header>
 
+        <!-- Navegação em Abas Principal -->
+        <nav class="nav-tabs" aria-label="Navegação do Sistema">
+            <button class="nav-btn active" id="tab-nav-home" onclick="switchPage('home-page')">🏠 Início</button>
+            <button class="nav-btn" id="tab-nav-client" onclick="switchPage('client-page')">🙋‍♂️ Agendar Corte</button>
+            <button class="nav-btn" id="tab-nav-barber" onclick="switchPage('barber-page')">💈 Área do Barbeiro</button>
+        </nav>
+
+        <!-- Mensagens de Alerta e Confirmação -->
         {% if erro %}
-            <div role="alert" aria-live="assertive">
-                <p style="color: #b71c1c; background-color: #ffebee; border: 1px solid #ffcdd2; padding: 10px; border-radius: 5px; font-weight: bold;">
-                    {{ erro }}
-                </p>
+            <div role="alert" aria-live="assertive" class="alert-box alert-danger">
+                <strong>{{ erro }}</strong>
             </div>
         {% endif %}
 
         {% if sucesso %}
-            <div role="status" aria-live="polite">
-                <p style="color: #1b5e20; background-color: #e8f5e9; border: 1px solid #c8e6c9; padding: 10px; border-radius: 5px; font-weight: bold;">
-                    {{ sucesso }}
-                </p>
+            <div role="status" aria-live="polite" class="alert-box alert-success">
+                <strong>{{ sucesso }}</strong>
             </div>
         {% endif %}
 
-        <form method="POST" id="formAgendamento" action="/" novalidate>
-            <input type="hidden" name="editar_id" value="{{ request.args.get('editar_id') or '' }}">
-
-            <!-- Dados Pessoais -->
-            <label for="nome">Nome:</label>
-            <div class="tooltip">
-                <input 
-                    type="text" 
-                    id="nome"
-                    name="nome" 
-                    placeholder="Nome completo" 
-                    value="{{ request.args.get('nome', '') }}"
-                    aria-describedby="dica-nome"
-                    required
-                >
-                <span id="dica-nome" class="tooltiptext">Adicione seu Nome + Sobrenome</span>
-            </div>
-
-            <!-- Integração ViaCEP -->
-            <label for="cep">CEP:</label>
-            <div class="tooltip">
-                <input 
-                    type="text" 
-                    id="cep" 
-                    name="cep" 
-                    placeholder="00000-000" 
-                    maxlength="9"
-                    aria-describedby="dica-cep"
-                    onblur="buscarCEP(this.value)"
-                >
-                <span id="dica-cep" class="tooltiptext">Digite o CEP para buscar endereço</span>
-            </div>
-
-            <div class="linha-dupla">
-                <div>
-                    <label for="logradouro">Logradouro:</label>
-                    <input type="text" id="logradouro" name="logradouro" placeholder="Rua / Av" readonly tabindex="-1">
+        <!-- ==================== SEÇÃO 1: INÍCIO ==================== -->
+        <section id="home-page" class="page-section active" aria-labelledby="home-title">
+            <div class="welcome-header">
+                <div class="welcome-title">
+                    <h1 id="home-title">Bem-vindo à <span>Urban Barber</span>! ✂️</h1>
+                    <p>Sua plataforma de agendamento rápido e gestão inteligente de estilo.</p>
                 </div>
-                <div>
-                    <label for="bairro">Bairro:</label>
-                    <input type="text" id="bairro" name="bairro" placeholder="Bairro" readonly tabindex="-1">
+                <button class="btn-action" onclick="switchPage('client-page')">Agendar Agora ➔</button>
+            </div>
+
+            <div class="section-title">🚀 Recursos do Sistema</div>
+            <div class="features-grid">
+                <div class="feature-card" onclick="switchPage('client-page')">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Agendamento Instantâneo</h3>
+                    <p>Consulta assíncrona de horários disponíveis em tempo real sem filas.</p>
+                    <span class="tag-keyword">#Praticidade</span>
+                </div>
+                <div class="feature-card" onclick="switchPage('barber-page')">
+                    <span class="feature-icon">💈</span>
+                    <h3>Gestão de Atendimentos</h3>
+                    <p>Controle do fluxo de clientes do dia com atalho direto para WhatsApp.</p>
+                    <span class="tag-keyword">#Eficiência</span>
+                </div>
+                <div class="feature-card" onclick="switchPage('client-page')">
+                    <span class="feature-icon">📍</span>
+                    <h3>Localização & CEP</h3>
+                    <p>Integração oficial com ViaCEP para autopreenchimento e mapa interativo.</p>
+                    <span class="tag-keyword">#Conectividade</span>
                 </div>
             </div>
 
-            <div class="linha-dupla">
-                <div>
-                    <label for="cidade">Cidade:</label>
-                    <input type="text" id="cidade" name="cidade" placeholder="Cidade" readonly tabindex="-1">
-                </div>
-                <div>
-                    <label for="estado">UF:</label>
-                    <input type="text" id="estado" name="estado" placeholder="UF" readonly tabindex="-1">
+            <div class="banner-container">
+                <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80" alt="Ferramentas profissionais da barbearia">
+                <div class="banner-text">
+                    <h2>Mais que um corte, uma experiência de estilo.</h2>
+                    <p>PRECISÃO • ESTILO • TECNOLOGIA • EXCLUSIVIDADE</p>
                 </div>
             </div>
 
-            <!-- Seleção de Serviço -->
-            <label for="servico">Serviço:</label>
-            <div class="tooltip">
-                <select name="servico" id="servico" aria-describedby="dica-servico" onchange="carregarHorariosDinamicos()">
-                    <option value="Corte" data-id="1" {% if request.args.get('servico') == 'Corte' %}selected{% endif %}>Corte (60 min)</option>
-                    <option value="Barba" data-id="2" {% if request.args.get('servico') == 'Barba' %}selected{% endif %}>Barba (30 min)</option>
-                    <option value="Corte + Barba" data-id="3" {% if request.args.get('servico') == 'Corte + Barba' %}selected{% endif %}>Corte + Barba (60 min)</option>
-                    <option value="Sobrancelha" data-id="4" {% if request.args.get('servico') == 'Sobrancelha' %}selected{% endif %}>Sobrancelha (30 min)</option>
-                </select>
-                <span id="dica-servico" class="tooltiptext">Escolha qual serviço deseja realizar</span>
+            <div class="section-title">🏛️ Nossa Essência</div>
+            <div class="mvv-container">
+                <div class="mvv-card">
+                    <div class="mvv-icon">🎯</div>
+                    <h3>Missão</h3>
+                    <p>Revolucionar o agendamento em barbearias com tecnologia rápida e sem fricção.</p>
+                </div>
+                <div class="mvv-card">
+                    <div class="mvv-icon">👁️</div>
+                    <h3>Visão</h3>
+                    <p>Ser a plataforma referência regional em valorização e gestão do estilo masculino.</p>
+                </div>
+                <div class="mvv-card">
+                    <div class="mvv-icon">⭐</div>
+                    <h3>Valores</h3>
+                    <p><strong>Excelência:</strong> Cuidado nos detalhes.<br><strong>Inovação:</strong> Web moderna.<br><strong>Respeito:</strong> Foco no cliente.</p>
+                </div>
             </div>
-
-            <!-- Seleção de Data -->
-            <label for="dataInput">Data:</label>
-            <div class="tooltip">
-                <input 
-                    type="date" 
-                    name="data" 
-                    id="dataInput"
-                    value="{{ request.args.get('data', '') }}"
-                    aria-describedby="dica-data"
-                    onchange="carregarHorariosDinamicos()"
-                    required
-                >
-                <span id="dica-data" class="tooltiptext">Escolha o dia</span>
-            </div>
-
-            <!-- Horários Dinâmicos Carregados via Fetch -->
-            <div id="secaoHorarios" style="display: none;">
-                <label id="labelHorarios">Horários Disponíveis:</label>
-                <p id="horariosStatus" class="status-msg" aria-live="polite"></p>
-                <div class="horarios" id="gridHorarios" role="group" aria-labelledby="labelHorarios"></div>
-            </div>
-
-            <input 
-                type="hidden" 
-                name="hora" 
-                id="horaSelecionada"
-                value="{{ request.args.get('hora', '') }}"
-                required
-            >
-
-            <button type="submit" id="btnSubmit" style="margin-top: 15px;">
-                {% if request.args.get('editar_id') %}
-                    Atualizar Agendamento
-                {% else %}
-                    Agendar
-                {% endif %}
-            </button>
-        </form>
-
-        <!-- Seção do Mapa -->
-        <section class="mapa-secao" aria-labelledby="tituloMapa">
-            <h2 id="tituloMapa" style="font-size: 16px; margin: 10px 0;">Nossa Localização</h2>
-            <iframe 
-                class="mapa-frame"
-                title="Mapa de localização da barbearia em Taubaté"
-                loading="lazy"
-                src="https://maps.google.com/maps?q=Taubate,SP&t=&z=14&ie=UTF8&iwloc=&output=embed">
-            </iframe>
         </section>
 
-        <!-- Seção da Agenda do Dia -->
-        <section id="secaoAgenda" style="display: none; margin-top: 25px;" aria-labelledby="tituloAgenda">
-            <h2 id="tituloAgenda">Agendamentos do Dia</h2>
-            <div class="agenda" id="containerAgendamentos"></div>
+        <!-- ==================== SEÇÃO 2: AGENDAR CORTE ==================== -->
+        <section id="client-page" class="page-section" aria-labelledby="client-title">
+            <div class="main-wrapper">
+                
+                <!-- Coluna Esquerda: Chat & Avaliações -->
+                <div class="app-card">
+                    <div class="logo-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 160" width="100%">
+                            <defs>
+                                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFE082" />
+                                    <stop offset="50%" stop-color="#FFB800" />
+                                    <stop offset="100%" stop-color="#B78103" />
+                                </linearGradient>
+                            </defs>
+                            <g transform="translate(30, 15)">
+                                <path d="M 30,10 L 80,10 L 95,50 L 80,110 L 30,110 L 15,50 Z" fill="none" stroke="url(#goldGradient)" stroke-width="2" opacity="0.3"/>
+                                <path d="M 35,25 L 35,70 C 35,90 75,90 75,70 L 75,25" fill="none" stroke="url(#goldGradient)" stroke-width="7" stroke-linecap="round"/>
+                                <path d="M 45,20 L 85,20 L 75,35 L 35,35 Z" fill="url(#goldGradient)" />
+                                <circle cx="55" cy="72" r="4" fill="#FFFFFF" />
+                            </g>
+                            <text x="150" y="75" font-family="'Segoe UI', sans-serif" font-size="48" font-weight="900" letter-spacing="5" fill="url(#goldGradient)">URBAN</text>
+                            <text x="155" y="108" font-family="'Segoe UI', sans-serif" font-size="18" font-weight="300" letter-spacing="12" fill="#F4F4F4" opacity="0.9">BARBER</text>
+                        </svg>
+                    </div>
+
+                    <div class="section-title">💬 Chat com a Barbearia</div>
+                    <div class="chat-box">
+                        <div class="chat-messages" id="client-chat-msgs">
+                            <div class="chat-msg msg-barber">Olá! Selecione o seu serviço e horário ao lado para agendar.</div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="client-chat-input" placeholder="Dúvida ou mensagem..." aria-label="Mensagem do chat">
+                            <button type="button" onclick="sendClientMsg()">Enviar</button>
+                        </div>
+                    </div>
+
+                    <div class="section-title">⭐ Avaliações dos Clientes</div>
+                    <div class="reviews-list" id="client-reviews-container">
+                        <div class="review-card">
+                            <div class="review-header">
+                                <span class="review-author">Matheus Lima</span>
+                                <span class="review-stars">★ ★ ★ ★ ★</span>
+                            </div>
+                            <p class="review-text">"Corte impecável! A visualização dinâmica dos horários facilitou demais."</p>
+                            <span class="review-tag">Cliente Frequente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Formulário Completo de Agendamento -->
+                <div class="app-card">
+                    <h2 id="client-title" class="section-title">📅 Realizar Agendamento</h2>
+                    
+                    <form method="POST" id="formAgendamento" action="/">
+                        <input type="hidden" name="editar_id" value="{{ request.args.get('editar_id') or '' }}">
+
+                        <!-- Identificação do Cliente -->
+                        <div class="form-group">
+                            <label for="nome">Seu Nome Completo:</label>
+                            <input 
+                                type="text" 
+                                id="nome" 
+                                name="nome" 
+                                placeholder="Digite seu nome completo" 
+                                value="{{ request.args.get('nome', '') }}" 
+                                required
+                            >
+                        </div>
+
+                        <!-- Autopreenchimento de Endereço via ViaCEP -->
+                        <div class="form-group">
+                            <label for="cep">CEP Residencial:</label>
+                            <input 
+                                type="text" 
+                                id="cep" 
+                                name="cep" 
+                                placeholder="00000-000" 
+                                maxlength="9" 
+                                onblur="buscarCEP(this.value)"
+                            >
+                        </div>
+
+                        <div class="linha-dupla">
+                            <div class="form-group">
+                                <label for="logradouro">Rua / Logradouro:</label>
+                                <input type="text" id="logradouro" name="logradouro" placeholder="Logradouro" readonly tabindex="-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="bairro">Bairro:</label>
+                                <input type="text" id="bairro" name="bairro" placeholder="Bairro" readonly tabindex="-1">
+                            </div>
+                        </div>
+
+                        <div class="linha-dupla">
+                            <div class="form-group">
+                                <label for="cidade">Cidade:</label>
+                                <input type="text" id="cidade" name="cidade" placeholder="Cidade" readonly tabindex="-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="estado">UF:</label>
+                                <input type="text" id="estado" name="estado" placeholder="UF" readonly tabindex="-1">
+                            </div>
+                        </div>
+
+                        <!-- Seleção do Serviço -->
+                        <div class="form-group">
+                            <label for="servico">Selecione o Serviço:</label>
+                            <select name="servico" id="servico" onchange="carregarHorariosDinamicos()">
+                                <option value="Corte" data-id="1" {% if request.args.get('servico') == 'Corte' %}selected{% endif %}>Corte Moderno (60 min - R$ 35,00)</option>
+                                <option value="Barba" data-id="2" {% if request.args.get('servico') == 'Barba' %}selected{% endif %}>Barba Completa (30 min - R$ 25,00)</option>
+                                <option value="Corte + Barba" data-id="3" {% if request.args.get('servico') == 'Corte + Barba' %}selected{% endif %}>Corte + Barba (60 min - R$ 55,00)</option>
+                                <option value="Sobrancelha" data-id="4" {% if request.args.get('servico') == 'Sobrancelha' %}selected{% endif %}>Sobrancelha (30 min - R$ 15,00)</option>
+                            </select>
+                        </div>
+
+                        <!-- Seleção da Data -->
+                        <div class="form-group">
+                            <label for="dataInput">Data do Agendamento:</label>
+                            <input 
+                                type="date" 
+                                name="data" 
+                                id="dataInput" 
+                                value="{{ request.args.get('data', '') }}" 
+                                onchange="carregarHorariosDinamicos()" 
+                                required
+                            >
+                        </div>
+
+                        <!-- Grade de Horários Dinâmicos (AJAX) -->
+                        <div id="secaoHorarios" class="form-group" style="display: none;">
+                            <label id="labelHorarios">Horários Disponíveis (Clique para selecionar):</label>
+                            <p id="horariosStatus" class="status-msg" aria-live="polite"></p>
+                            <div class="horarios" id="gridHorarios" role="group" aria-labelledby="labelHorarios"></div>
+                        </div>
+
+                        <input type="hidden" name="hora" id="horaSelecionada" value="{{ request.args.get('hora', '') }}" required>
+
+                        <button type="submit" class="btn-submit" id="btnSubmit">
+                            {% if request.args.get('editar_id') %}
+                                Atualizar Agendamento
+                            {% else %}
+                                Confirmar Agendamento
+                            {% endif %}
+                        </button>
+                    </form>
+
+                    <!-- Mapa Oficial da Barbearia -->
+                    <div class="mapa-secao">
+                        <div class="section-title">📍 Nossa Localização</div>
+                        <iframe 
+                            class="mapa-frame" 
+                            title="Mapa de localização da barbearia em Taubaté"
+                            loading="lazy" 
+                            src="https://maps.google.com/maps?q=Taubate,SP&t=&z=14&ie=UTF8&iwloc=&output=embed">
+                        </iframe>
+                    </div>
+
+                    <!-- Agendamentos do Dia Dinâmicos -->
+                    <div id="secaoAgenda" style="display: none; margin-top: 25px;">
+                        <div class="section-title">📅 Agendamentos do Dia Selecionado</div>
+                        <div class="agenda" id="containerAgendamentos"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== SEÇÃO 3: ÁREA DO BARBEIRO ==================== -->
+        <section id="barber-page" class="page-section" aria-labelledby="barber-title">
+            
+            <!-- Painel Visual de Métricas / KPIs (Quinzena 6) -->
+            <div class="kpi-container">
+                <div class="kpi-card">
+                    <h3>Atendimentos Registrados</h3>
+                    <p id="kpi-total-agendamentos">{{ agendamentos|length if agendamentos else 0 }}</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Serviços Mais Solicitados</h3>
+                    <p style="font-size: 1.1rem; color: var(--accent-gold);">Corte & Barba</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Disponibilidade Semanal</h3>
+                    <p style="color: var(--success); font-size: 1.1rem;">Terça a Sábado</p>
+                </div>
+            </div>
+
+            <div class="admin-grid">
+                
+                <!-- Lista de Agendamentos Reais do Banco -->
+                <div class="app-card">
+                    <h2 id="barber-title" class="section-title">📅 Agenda da Barbearia</h2>
+                    
+                    <div class="form-group">
+                        <input type="text" id="search-input" onkeyup="filterAppointments()" placeholder="🔍 Buscar cliente por nome ou serviço...">
+                    </div>
+
+                    <div id="appointments-list">
+                        {% if agendamentos %}
+                            {% for ag in agendamentos %}
+                                <div class="card-item" data-name="{{ ag.nome }} {{ ag.servico }}">
+                                    <div class="card-info">
+                                        <strong>{{ ag.nome }}</strong>
+                                        <span>{{ ag.servico }}</span><br>
+                                        <small style="color: var(--accent-gold);">{{ ag.data }}</small>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <!-- Atalho WhatsApp Dinâmico (Quinzena 6) -->
+                                        <a href="https://api.whatsapp.com/send?text=Ol%C3%A1%20{{ ag.nome }}!%20Confirmamos%20seu%20hor%C3%A1rio%20na%20Urban%20Barber:%20{{ ag.servico }}%20em%20{{ ag.data }}." target="_blank" class="btn-wsp" title="Confirmar horário via WhatsApp">WhatsApp</a>
+                                        <a href="/editar/{{ ag.id }}" class="btn-acao-remarcar">Remarcar</a>
+                                        <form method="POST" action="/deletar/{{ ag.id }}" style="display:inline;" onsubmit="return confirm('Deseja cancelar o agendamento de {{ ag.nome }}?');">
+                                            <button type="submit" class="btn-acao-cancelar">Cancelar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="status-msg">Nenhum agendamento listado no momento. Selecione uma data na aba de agendamento.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Chat com Clientes -->
+                <div class="app-card">
+                    <div class="section-title">💬 Chat do Barbeiro</div>
+                    <div class="chat-box">
+                        <div class="chat-messages" id="barber-chat-msgs">
+                            <div class="chat-msg msg-barber">Canal de suporte interno ativo.</div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="barber-chat-input" placeholder="Responder cliente..." aria-label="Resposta do barbeiro">
+                            <button type="button" onclick="sendBarberMsg()">Responder</button>
+                        </div>
+                    </div>
+
+                    <!-- Depoimentos de Barbeiros -->
+                    <div class="section-title" style="margin-top: 20px;">💈 Depoimentos da Equipe</div>
+                    <div class="reviews-list" id="barber-reviews-container">
+                        <div class="review-card">
+                            <div class="review-header">
+                                <span class="review-author">Equipe Barber</span>
+                                <span class="review-stars">★ ★ ★ ★ ★</span>
+                            </div>
+                            <p class="review-text">"O sistema assíncrono evitou sobreposição de horários e conflitos na barbearia."</p>
+                            <span class="review-tag">Equipe Interna</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </section>
 
     </main>
 
+    <!-- Script de lógica assíncrona, ViaCEP e manipulação de abas -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-
 </body>
 </html>
