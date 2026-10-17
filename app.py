@@ -82,6 +82,12 @@ def criar_tabelas():
     )
     """)
 
+    # Garante que a coluna telefone exista mesmo se a tabela já foi criada anteriormente
+    try:
+        cursor.execute("ALTER TABLE agendamentos ADD COLUMN telefone TEXT;")
+    except sqlite3.OperationalError:
+        pass  # Já existe a coluna, ignora o erro
+
     servicos_iniciais = [
         ("Corte", 60, 35.0),
         ("Barba", 30, 25.0),
