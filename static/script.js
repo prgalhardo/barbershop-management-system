@@ -1,4 +1,21 @@
-// 1. Integração com API Externa ViaCEP
+// ==================== 1. NAVEGAÇÃO DE ABAS ====================
+function switchPage(pageId) {
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
+
+    if (pageId === 'home-page') document.getElementById('tab-nav-home')?.classList.add('active');
+    if (pageId === 'client-page') document.getElementById('tab-nav-client')?.classList.add('active');
+    if (pageId === 'barber-page') document.getElementById('tab-nav-barber')?.classList.add('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ==================== 2. INTEGRAÇÃO VIACEP ====================
 async function buscarCEP(valor) {
     const cep = valor.replace(/\D/g, '');
     if (cep.length !== 8) return;
@@ -34,7 +51,7 @@ function limparEndereco() {
     document.getElementById('estado').value = '';
 }
 
-// Mapeamento dos IDs de serviço
+// ==================== 3. AGENDAMENTOS E HORÁRIOS ASSÍNCRONOS ====================
 const servicosMap = {
     "Corte": 1,
     "Barba": 2,
@@ -42,13 +59,12 @@ const servicosMap = {
     "Sobrancelha": 4
 };
 
-// 2. Chamada Assíncrona para Listar Agendamentos do Dia
 async function carregarAgendamentosDoDia(dataVal) {
     const secao = document.getElementById('secaoAgenda');
     const container = document.getElementById('containerAgendamentos');
 
     if (!dataVal) {
-        secao.style.display = 'none';
+        if (secao) secao.style.display = 'none';
         return;
     }
 
@@ -68,10 +84,12 @@ async function carregarAgendamentosDoDia(dataVal) {
                     <p><strong>Cliente:</strong> ${ag.nome}</p>
                     <p><strong>Serviço:</strong> ${ag.servico}</p>
                     <p><strong>Horário:</strong> ${ag.data}</p>
-                    <a href="/editar/${ag.id}"><button type="button">Remarcar</button></a>
-                    <form method="POST" action="/deletar/${ag.id}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja cancelar o agendamento de ${ag.nome}?');">
-                        <button type="submit">Cancelar</button>
-                    </form>
+                    <div style="display:flex; gap: 8px;">
+                        <a href="/editar/${ag.id}"><button type="button">Remarcar</button></a>
+                        <form method="POST" action="/deletar/${ag.id}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja cancelar o agendamento de ${ag.nome}?');">
+                            <button type="submit">Cancelar</button>
+                        </form>
+                    </div>
                 `;
                 container.appendChild(card);
             });
@@ -83,10 +101,9 @@ async function carregarAgendamentosDoDia(dataVal) {
     }
 }
 
-// 3. Chamada Assíncrona para Horários Dinâmicos
 async function carregarHorariosDinamicos() {
-    const dataVal = document.getElementById('dataInput').value;
-    const servicoNome = document.getElementById('servico').value;
+    const dataVal = document.getElementById('dataInput')?.value;
+    const servicoNome = document.getElementById('servico')?.value;
     const servicoId = servicosMap[servicoNome] || 1;
     const secao = document.getElementById('secaoHorarios');
     const grid = document.getElementById('gridHorarios');
@@ -94,29 +111,26 @@ async function carregarHorariosDinamicos() {
     const campoHora = document.getElementById('horaSelecionada');
 
     if (!dataVal) {
-        secao.style.display = 'none';
-        document.getElementById('secaoAgenda').style.display = 'none';
+        if (secao) secao.style.display = 'none';
         return;
     }
 
-    // Atualiza a lista de agendamentos existentes
     carregarAgendamentosDoDia(dataVal);
 
-    // Carrega a grelha de horários disponíveis
-    secao.style.display = 'block';
-    grid.innerHTML = '';
-    status.textContent = 'A verificar horários disponíveis...';
+    if (secao) secao.style.display = 'block';
+    if (grid) grid.innerHTML = '';
+    if (status) status.textContent = 'Verificando horários disponíveis...';
 
     try {
         const response = await fetch(`/api/v1/horarios-disponiveis?data=${dataVal}&servico_id=${servicoId}`);
-        if (!response.ok) throw new Error('Erro ao obter horários.');
+        if (!response.ok) throw new Error('Erro ao buscar horários.');
 
         const lista = await response.json();
-        status.textContent = '';
-        grid.innerHTML = '';
+        if (status) status.textContent = '';
+        if (grid) grid.innerHTML = '';
 
         if (lista.length === 0) {
-            status.textContent = 'Nenhum horário disponível para esta data.';
+            if (status) status.textContent = 'Nenhum horário disponível para esta data.';
             return;
         }
 
@@ -127,7 +141,7 @@ async function carregarHorariosDinamicos() {
             btn.textContent = item.hora;
             btn.disabled = item.ocupado;
 
-            if (campoHora.value === item.hora && !item.ocupado) {
+            if (campoHora && campoHora.value === item.hora && !item.ocupado) {
                 btn.classList.add('selecionado');
             }
 
@@ -135,7 +149,7 @@ async function carregarHorariosDinamicos() {
                 btn.onclick = () => {
                     document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('selecionado'));
                     btn.classList.add('selecionado');
-                    campoHora.value = item.hora;
+                    if (campoHora) campoHora.value = item.hora;
                 };
             }
 
@@ -143,14 +157,54 @@ async function carregarHorariosDinamicos() {
         });
     } catch (err) {
         console.error(err);
-        status.textContent = 'Erro ao carregar horários. Tente novamente.';
+        if (status) status.textContent = 'Erro ao carregar horários. Verifique a conexão com o servidor.';
     }
 }
 
-// Inicialização caso a página já contenha uma data selecionada
+// ==================== 4. BUSCA E CHAT ====================
+function filterAppointments() {
+    const input = document.getElementById('search-input')?.value.toLowerCase();
+    const items = document.querySelectorAll('#appointments-list .card-item');
+    items.forEach(item => {
+        const text = item.getAttribute('data-name')?.toLowerCase() || '';
+        item.style.display = text.includes(input) ? 'flex' : 'none';
+    });
+}
+
+function sendClientMsg() {
+    const input = document.getElementById('client-chat-input');
+    if (!input || !input.value.trim()) return;
+    appendMsg('client-chat-msgs', input.value, 'msg-client');
+    appendMsg('barber-chat-msgs', input.value, 'msg-client');
+    input.value = '';
+}
+
+function sendBarberMsg() {
+    const input = document.getElementById('barber-chat-input');
+    if (!input || !input.value.trim()) return;
+    appendMsg('barber-chat-msgs', input.value, 'msg-barber');
+    appendMsg('client-chat-msgs', input.value, 'msg-barber');
+    input.value = '';
+}
+
+function appendMsg(containerId, text, className) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-msg ${className}`;
+    msgDiv.innerText = text;
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+}
+
+// Inicialização: se vier data ou editar_id na URL, ativa direto a aba de agendamento
 window.addEventListener('DOMContentLoaded', () => {
-    const inputData = document.getElementById('dataInput');
-    if (inputData && inputData.value) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('data') || urlParams.has('editar_id') || urlParams.has('sucesso')) {
+        switchPage('client-page');
+    }
+
+    if (document.getElementById('dataInput')?.value) {
         carregarHorariosDinamicos();
     }
 });
