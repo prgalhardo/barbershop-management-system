@@ -11,7 +11,7 @@ body {
 
 .container {
     width: 90%;
-    max-width: 400px;
+    max-width: 440px;
     margin: 20px auto;
     background: white;
     padding: 20px;
@@ -31,12 +31,46 @@ h3 {
     color: #555;
 }
 
+h4 {
+    margin: 25px 0 10px;
+    font-size: 16px;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+label {
+    display: block;
+    text-align: left;
+    font-size: 13px;
+    font-weight: bold;
+    color: #444;
+    margin-top: 10px;
+}
+
 input, select {
     width: 100%;
     padding: 10px;
-    margin: 5px 0 15px;
+    margin: 5px 0 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* Campos somente leitura do endereço preenchido */
+input[readonly] {
+    background-color: #f8f9fa;
+    color: #555;
+    cursor: not-allowed;
+}
+
+.linha-dupla {
+    display: flex;
+    gap: 10px;
+}
+
+.linha-dupla > div {
+    flex: 1;
 }
 
 /* DATE INPUT */
@@ -48,7 +82,6 @@ input[type="date"] {
     padding: 10px;
     padding-right: 35px;
     font-size: 13px;
-
     background: url("https://cdn-icons-png.flaticon.com/512/747/747310.png") no-repeat right 10px center;
     background-size: 18px;
 }
@@ -63,6 +96,8 @@ button {
     border-radius: 5px;
     cursor: pointer;
     transition: 0.2s ease;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 button:hover {
@@ -109,6 +144,27 @@ button:hover {
     transform: scale(0.95);
 }
 
+.status-msg {
+    font-size: 13px;
+    color: #666;
+    margin: 10px 0;
+}
+
+/* MAPA */
+.mapa-secao {
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.mapa-frame {
+    width: 100%;
+    height: 220px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+
 /* LISTA */
 ul {
     list-style: none;
@@ -134,7 +190,6 @@ li {
     border-radius: 8px;
     text-align: left;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-
     display: flex;
     flex-direction: column;
 }
