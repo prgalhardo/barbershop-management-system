@@ -102,6 +102,9 @@ def criar_tabelas():
     conn.commit()
     conn.close()
 
+# Garante a criação de todas as tabelas na inicialização com Gunicorn ou local
+criar_tabelas()
+
 # EDITAR (UPDATE)
 @app.route("/editar/<int:id>")
 def editar(id):
