@@ -75,6 +75,7 @@ def criar_tabelas():
     CREATE TABLE IF NOT EXISTS agendamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT,
+        telefone TEXT,
         servico TEXT,
         data TEXT,
         duracao INTEGER
