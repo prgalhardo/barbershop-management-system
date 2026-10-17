@@ -132,138 +132,15 @@
             </iframe>
         </div>
 
-        {% if agendamentos %}
-            <h2>Agendamentos</h2>
-            <div class="agenda">
-                {% for agendamento in agendamentos %}
-                    <div class="card">
-                        <p><strong>Cliente:</strong> {{ agendamento.nome }}</p>
-                        <p><strong>Serviço:</strong> {{ agendamento.servico }}</p>
-                        <p><strong>Horário:</strong> {{ agendamento.data }}</p>
-                        <a href="/editar/{{ agendamento.id }}">
-                            <button type="button">Remarcar</button>
-                        </a>
-                        <form method="POST" action="/deletar/{{ agendamento.id }}">
-                            <button type="submit">Cancelar</button>
-                        </form>
-                    </div>
-                {% endfor %}
+        <div id="secaoAgenda" style="display: none; margin-top: 25px;">
+            <h2>Agendamentos do Dia</h2>
+            <div class="agenda" id="containerAgendamentos">
             </div>
-        {% endif %}
+        </div>
 
     </div>
 
-    <script>
-        // 1. API ViaCEP
-        async function buscarCEP(valor) {
-            const cep = valor.replace(/\D/g, '');
-            if (cep.length !== 8) return;
-
-            document.getElementById('logradouro').value = 'Buscando...';
-            document.getElementById('bairro').value = 'Buscando...';
-            document.getElementById('cidade').value = 'Buscando...';
-            document.getElementById('estado').value = '...';
-
-            try {
-                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                const data = await response.json();
-
-                if (!data.erro) {
-                    document.getElementById('logradouro').value = data.logradouro || '';
-                    document.getElementById('bairro').value = data.bairro || '';
-                    document.getElementById('cidade').value = data.localidade || '';
-                    document.getElementById('estado').value = data.uf || '';
-                } else {
-                    alert('CEP não encontrado.');
-                    limparEndereco();
-                }
-            } catch (err) {
-                console.error('Erro na consulta ViaCEP:', err);
-                limparEndereco();
-            }
-        }
-
-        function limparEndereco() {
-            document.getElementById('logradouro').value = '';
-            document.getElementById('bairro').value = '';
-            document.getElementById('cidade').value = '';
-            document.getElementById('estado').value = '';
-        }
-
-        // Mapeamento dos IDs de serviço para bater com os IDs do banco
-        const servicosMap = {
-            "Corte": 1,
-            "Barba": 2,
-            "Corte + Barba": 3,
-            "Sobrancelha": 4
-        };
-
-        // 2. Fetch API para Horários Dinâmicos
-        async function carregarHorariosDinamicos() {
-            const dataVal = document.getElementById('dataInput').value;
-            const servicoNome = document.getElementById('servico').value;
-            const servicoId = servicosMap[servicoNome] || 1;
-            const secao = document.getElementById('secaoHorarios');
-            const grid = document.getElementById('gridHorarios');
-            const status = document.getElementById('horariosStatus');
-            const campoHora = document.getElementById('horaSelecionada');
-
-            if (!dataVal) {
-                secao.style.display = 'none';
-                return;
-            }
-
-            secao.style.display = 'block';
-            grid.innerHTML = '';
-            status.textContent = 'Verificando horários disponíveis...';
-
-            try {
-                const response = await fetch(`/api/v1/horarios-disponiveis?data=${dataVal}&servico_id=${servicoId}`);
-                if (!response.ok) throw new Error('Erro ao buscar horários.');
-
-                const lista = await response.json();
-                status.textContent = '';
-                grid.innerHTML = '';
-
-                if (lista.length === 0) {
-                    status.textContent = 'Nenhum horário disponível para esta data.';
-                    return;
-                }
-
-                lista.forEach(item => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = `hora-btn ${item.ocupado ? 'ocupado' : ''}`;
-                    btn.textContent = item.hora;
-                    btn.disabled = item.ocupado;
-
-                    if (campoHora.value === item.hora && !item.ocupado) {
-                        btn.classList.add('selecionado');
-                    }
-
-                    if (!item.ocupado) {
-                        btn.onclick = () => {
-                            document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('selecionado'));
-                            btn.classList.add('selecionado');
-                            campoHora.value = item.hora;
-                        };
-                    }
-
-                    grid.appendChild(btn);
-                });
-            } catch (err) {
-                console.error(err);
-                status.textContent = 'Erro ao carregar horários. Verifique a conexão com o servidor.';
-            }
-        }
-
-        // Caso a tela carregue já com uma data preenchida 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (document.getElementById('dataInput').value) {
-                carregarHorariosDinamicos();
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 </html>
