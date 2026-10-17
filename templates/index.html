@@ -179,6 +179,18 @@
                             >
                         </div>
 
+                        <div class="form-group">
+                            <label for="telefone">WhatsApp / Celular:</label>
+                            <input 
+                                type="tel" 
+                                id="telefone" 
+                                name="telefone" 
+                                placeholder="(12) 99999-9999" 
+                                value="{{ request.args.get('telefone', '') }}" 
+                                required
+                            >
+                        </div>
+
                         <!-- Autopreenchimento de Endereço via ViaCEP -->
                         <div class="form-group">
                             <label for="cep">CEP Residencial:</label>
@@ -328,8 +340,9 @@
                                         <small style="color: var(--accent-gold);">{{ ag.data }}</small>
                                     </div>
                                     <div style="display: flex; gap: 8px; align-items: center;">
-                                        <!-- Atalho WhatsApp Dinâmico (Quinzena 6) -->
-                                        <a href="https://api.whatsapp.com/send?text=Ol%C3%A1%20{{ ag.nome }}!%20Confirmamos%20seu%20hor%C3%A1rio%20na%20Urban%20Barber:%20{{ ag.servico }}%20em%20{{ ag.data }}." target="_blank" class="btn-wsp" title="Confirmar horário via WhatsApp">WhatsApp</a>
+                                        <!-- Atalho WhatsApp Dinâmico -->
+                                        {% set tel_limpo = ag.telefone|replace('(', '')|replace(')', '')|replace('-', '')|replace(' ', '') %}
+                                        <a href="https://api.whatsapp.com/send?phone=55{{ tel_limpo }}&text=Ol%C3%A1%20{{ ag.nome }}!%20Confirmamos%20seu%20hor%C3%A1rio%20na%20Urban%20Barber:%20{{ ag.servico }}%20em%20{{ ag.data }}." target="_blank" class="btn-wsp" title="Enviar confirmação direta para {{ ag.telefone }}">WhatsApp</a>
                                         <a href="/editar/{{ ag.id }}" class="btn-acao-remarcar">Remarcar</a>
                                         <form method="POST" action="/deletar/{{ ag.id }}" style="display:inline;" onsubmit="return confirm('Deseja cancelar o agendamento de {{ ag.nome }}?');">
                                             <button type="submit" class="btn-acao-cancelar">Cancelar</button>

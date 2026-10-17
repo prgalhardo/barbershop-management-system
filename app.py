@@ -102,7 +102,7 @@ def editar(id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, nome, servico, data
+        SELECT id, nome, telefone, servico, data
         FROM agendamentos
         WHERE id = ?
     """, (id,))
@@ -113,13 +113,14 @@ def editar(id):
     if not ag:
         return redirect("/")
 
-    data_obj = datetime.strptime(ag[3], "%Y-%m-%d %H:%M")
+    data_obj = datetime.strptime(ag[4], "%Y-%m-%d %H:%M")
 
     return redirect(url_for(
         "home",
         editar_id=ag[0],
         nome=ag[1],
-        servico=ag[2],
+        telefone=ag[2] or "",
+        servico=ag[3],
         data=data_obj.strftime("%Y-%m-%d"),
         hora=data_obj.strftime("%H:%M")
     ))
@@ -164,6 +165,7 @@ def home():
     # CADASTRAR / ATUALIZAR
     if request.method == "POST":
         nome = request.form.get("nome")
+        telefone = str(request.form.get("telefone") or "")
         servico = request.form.get("servico")
         data = request.form.get("data")
         hora = request.form.get("hora")
@@ -214,15 +216,15 @@ def home():
                 if editar_id:
                     cursor.execute("""
                         UPDATE agendamentos
-                        SET nome = ?, servico = ?, data = ?, duracao = ?
+                        SET nome = ?, telefone = ?, servico = ?, data = ?, duracao = ?
                         WHERE id = ?
-                    """, (nome, servico, data_completa, duracao, editar_id))
+                    """, (nome, telefone, servico, data_completa, duracao, editar_id))
                     msg_sucesso = "Horário reagendado com sucesso!"
                 else:
                     cursor.execute("""
-                        INSERT INTO agendamentos (nome, servico, data, duracao)
-                        VALUES (?, ?, ?, ?)
-                    """, (nome, servico, data_completa, duracao))
+                        INSERT INTO agendamentos (nome, telefone, servico, data, duracao)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (nome, telefone, servico, data_completa, duracao))
                     msg_sucesso = "Agendamento realizado com sucesso!"
 
                 conn.commit()
@@ -230,13 +232,13 @@ def home():
 
                 return redirect(url_for("home", data=data, sucesso=msg_sucesso))
 
-    # LISTAR AGENDAMENTOS
+  # LISTAR AGENDAMENTOS
     conn = sqlite3.connect("barbearia.db")
     cursor = conn.cursor()
 
     if data_filtro:
         cursor.execute("""
-            SELECT id, nome, servico, data 
+            SELECT id, nome, telefone, servico, data 
             FROM agendamentos 
             WHERE data LIKE ?
             ORDER BY data
@@ -244,7 +246,7 @@ def home():
         dados = cursor.fetchall()
     else:
         cursor.execute("""
-            SELECT id, nome, servico, data 
+            SELECT id, nome, telefone, servico, data 
             FROM agendamentos 
             ORDER BY data
         """)
@@ -256,13 +258,14 @@ def home():
 
     for ag in dados:
         data_formatada = datetime.strptime(
-            ag[3], "%Y-%m-%d %H:%M"
+            ag[4], "%Y-%m-%d %H:%M"
         ).strftime("%d/%m/%Y às %H:%M")
 
         agendamentos.append({
             "id": ag[0],
             "nome": ag[1],
-            "servico": ag[2],
+            "telefone": ag[2] or "",
+            "servico": ag[3],
             "data": data_formatada
         })
 
