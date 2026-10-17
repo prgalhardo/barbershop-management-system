@@ -253,3 +253,18 @@ li {
 .tooltip:hover .tooltiptext {
     visibility: visible;
 }
+
+/* ACESSIBILIDADE WCAG - Foco visível para navegação por teclado */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid #0056b3;
+    outline-offset: 2px;
+}
+
+.subtitulo {
+    margin-top: -10px;
+    margin-bottom: 20px;
+    color: #444;
+}

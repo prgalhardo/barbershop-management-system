@@ -2,29 +2,37 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Barbearia</title>
+    <title>Urban Barber - Agendamento de Horários</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
 
-    <div class="container">
+    <main class="container">
 
-        <h1>Urban Barber</h1>
-        <h3>Agende seu horário!</h3>
+        <header>
+            <h1>Urban Barber</h1>
+            <p class="subtitulo">Agende seu horário!</p>
+        </header>
 
         {% if erro %}
-            <p style="color: red;"><strong>{{ erro }}</strong></p>
+            <div role="alert" aria-live="assertive">
+                <p style="color: #b71c1c; background-color: #ffebee; border: 1px solid #ffcdd2; padding: 10px; border-radius: 5px; font-weight: bold;">
+                    {{ erro }}
+                </p>
+            </div>
         {% endif %}
 
         {% if sucesso %}
-            <p style="color: #28a745; background-color: #e8f5e9; border: 1px solid #c8e6c9; padding: 10px; border-radius: 5px; font-weight: bold;">
-                {{ sucesso }}
-            </p>
+            <div role="status" aria-live="polite">
+                <p style="color: #1b5e20; background-color: #e8f5e9; border: 1px solid #c8e6c9; padding: 10px; border-radius: 5px; font-weight: bold;">
+                    {{ sucesso }}
+                </p>
+            </div>
         {% endif %}
 
-        <form method="POST" id="formAgendamento" action="/">
+        <form method="POST" id="formAgendamento" action="/" novalidate>
             <input type="hidden" name="editar_id" value="{{ request.args.get('editar_id') or '' }}">
 
             <!-- Dados Pessoais -->
@@ -36,9 +44,10 @@
                     name="nome" 
                     placeholder="Nome completo" 
                     value="{{ request.args.get('nome', '') }}"
+                    aria-describedby="dica-nome"
                     required
                 >
-                <span class="tooltiptext">Adicione seu Nome + Sobrenome</span>
+                <span id="dica-nome" class="tooltiptext">Adicione seu Nome + Sobrenome</span>
             </div>
 
             <!-- Integração ViaCEP -->
@@ -50,43 +59,44 @@
                     name="cep" 
                     placeholder="00000-000" 
                     maxlength="9"
+                    aria-describedby="dica-cep"
                     onblur="buscarCEP(this.value)"
                 >
-                <span class="tooltiptext">Digite o CEP para buscar endereço</span>
+                <span id="dica-cep" class="tooltiptext">Digite o CEP para buscar endereço</span>
             </div>
 
             <div class="linha-dupla">
                 <div>
                     <label for="logradouro">Logradouro:</label>
-                    <input type="text" id="logradouro" name="logradouro" placeholder="Rua / Av" readonly>
+                    <input type="text" id="logradouro" name="logradouro" placeholder="Rua / Av" readonly tabindex="-1">
                 </div>
                 <div>
                     <label for="bairro">Bairro:</label>
-                    <input type="text" id="bairro" name="bairro" placeholder="Bairro" readonly>
+                    <input type="text" id="bairro" name="bairro" placeholder="Bairro" readonly tabindex="-1">
                 </div>
             </div>
 
             <div class="linha-dupla">
                 <div>
                     <label for="cidade">Cidade:</label>
-                    <input type="text" id="cidade" name="cidade" placeholder="Cidade" readonly>
+                    <input type="text" id="cidade" name="cidade" placeholder="Cidade" readonly tabindex="-1">
                 </div>
                 <div>
                     <label for="estado">UF:</label>
-                    <input type="text" id="estado" name="estado" placeholder="UF" readonly>
+                    <input type="text" id="estado" name="estado" placeholder="UF" readonly tabindex="-1">
                 </div>
             </div>
 
             <!-- Seleção de Serviço -->
             <label for="servico">Serviço:</label>
             <div class="tooltip">
-                <select name="servico" id="servico" onchange="carregarHorariosDinamicos()">
+                <select name="servico" id="servico" aria-describedby="dica-servico" onchange="carregarHorariosDinamicos()">
                     <option value="Corte" data-id="1" {% if request.args.get('servico') == 'Corte' %}selected{% endif %}>Corte (60 min)</option>
                     <option value="Barba" data-id="2" {% if request.args.get('servico') == 'Barba' %}selected{% endif %}>Barba (30 min)</option>
                     <option value="Corte + Barba" data-id="3" {% if request.args.get('servico') == 'Corte + Barba' %}selected{% endif %}>Corte + Barba (60 min)</option>
                     <option value="Sobrancelha" data-id="4" {% if request.args.get('servico') == 'Sobrancelha' %}selected{% endif %}>Sobrancelha (30 min)</option>
                 </select>
-                <span class="tooltiptext">Escolha qual serviço deseja realizar</span>
+                <span id="dica-servico" class="tooltiptext">Escolha qual serviço deseja realizar</span>
             </div>
 
             <!-- Seleção de Data -->
@@ -97,17 +107,18 @@
                     name="data" 
                     id="dataInput"
                     value="{{ request.args.get('data', '') }}"
+                    aria-describedby="dica-data"
                     onchange="carregarHorariosDinamicos()"
                     required
                 >
-                <span class="tooltiptext">Escolha o dia</span>
+                <span id="dica-data" class="tooltiptext">Escolha o dia</span>
             </div>
 
             <!-- Horários Dinâmicos Carregados via Fetch -->
             <div id="secaoHorarios" style="display: none;">
-                <label>Horários Disponíveis:</label>
-                <p id="horariosStatus" class="status-msg"></p>
-                <div class="horarios" id="gridHorarios"></div>
+                <label id="labelHorarios">Horários Disponíveis:</label>
+                <p id="horariosStatus" class="status-msg" aria-live="polite"></p>
+                <div class="horarios" id="gridHorarios" role="group" aria-labelledby="labelHorarios"></div>
             </div>
 
             <input 
@@ -128,23 +139,23 @@
         </form>
 
         <!-- Seção do Mapa -->
-        <div class="mapa-secao">
-            <h4>Nossa Localização</h4>
+        <section class="mapa-secao" aria-labelledby="tituloMapa">
+            <h2 id="tituloMapa" style="font-size: 16px; margin: 10px 0;">Nossa Localização</h2>
             <iframe 
                 class="mapa-frame"
-                title="Mapa da Barbearia"
+                title="Mapa de localização da barbearia em Taubaté"
                 loading="lazy"
                 src="https://maps.google.com/maps?q=Taubate,SP&t=&z=14&ie=UTF8&iwloc=&output=embed">
             </iframe>
-        </div>
+        </section>
 
-        <div id="secaoAgenda" style="display: none; margin-top: 25px;">
-            <h2>Agendamentos do Dia</h2>
-            <div class="agenda" id="containerAgendamentos">
-            </div>
-        </div>
+        <!-- Seção da Agenda do Dia -->
+        <section id="secaoAgenda" style="display: none; margin-top: 25px;" aria-labelledby="tituloAgenda">
+            <h2 id="tituloAgenda">Agendamentos do Dia</h2>
+            <div class="agenda" id="containerAgendamentos"></div>
+        </section>
 
-    </div>
+    </main>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 

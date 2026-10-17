@@ -69,7 +69,7 @@ async function carregarAgendamentosDoDia(dataVal) {
                     <p><strong>Serviço:</strong> ${ag.servico}</p>
                     <p><strong>Horário:</strong> ${ag.data}</p>
                     <a href="/editar/${ag.id}"><button type="button">Remarcar</button></a>
-                    <form method="POST" action="/deletar/${ag.id}" style="display:inline;">
+                    <form method="POST" action="/deletar/${ag.id}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja cancelar o agendamento de ${ag.nome}?');">
                         <button type="submit">Cancelar</button>
                     </form>
                 `;
